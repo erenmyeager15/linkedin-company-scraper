@@ -1,0 +1,45 @@
+{
+    "title": "LinkedIn Company Scraper Input",
+    "description": "Configure which LinkedIn company pages to scrape. Direct company URLs work best (public guest pages); name search requires LinkedIn login and is best-effort.",
+    "type": "object",
+    "schemaVersion": 1,
+    "required": [],
+    "properties": {
+        "companyUrls": {
+            "title": "LinkedIn Company URLs",
+            "description": "List of LinkedIn company profile URLs to scrape directly. Example: https://www.linkedin.com/company/microsoft/",
+            "type": "array",
+            "editor": "stringList",
+            "default": ["https://www.linkedin.com/company/microsoft"],
+            "prefill": ["https://www.linkedin.com/company/microsoft"],
+            "sectionCaption": "Direct Company URLs"
+        },
+        "companyNames": {
+            "title": "Company Names to Search (beta)",
+            "description": "Company names to search on LinkedIn. Note: LinkedIn search requires login, so this is best-effort. Direct company URLs are recommended.",
+            "type": "array",
+            "editor": "stringList",
+            "default": [],
+            "sectionCaption": "Search by Company Name"
+        },
+        "maxResults": {
+            "title": "Max Results per Search",
+            "description": "Maximum number of company profiles to scrape per company name search query.",
+            "type": "integer",
+            "default": 5,
+            "minimum": 1,
+            "maximum": 100,
+            "editor": "number"
+        },
+        "proxyConfiguration": {
+            "title": "Proxy Configuration",
+            "description": "Proxy settings for scraping. Residential proxies are strongly recommended for LinkedIn.",
+            "type": "object",
+            "editor": "proxy",
+            "default": {
+                "useApifyProxy": true,
+                "apifyProxyGroups": ["RESIDENTIAL"]
+            }
+        }
+    }
+}

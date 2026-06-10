@@ -1,0 +1,31 @@
+{
+    "name": "linkedin-company-scraper",
+    "version": "1.0.0",
+    "description": "Production-ready Apify Actor for scraping LinkedIn company profiles",
+    "type": "module",
+    "engines": {
+        "node": ">=20.0.0"
+    },
+    "scripts": {
+        "build": "tsc",
+        "start": "node dist/main.js",
+        "start:prod": "node dist/main.js",
+        "test": "vitest",
+        "lint": "eslint src --ext .ts",
+        "typecheck": "tsc --noEmit"
+    },
+    "dependencies": {
+        "apify": "^3.2.0",
+        "crawlee": "^3.9.0",
+        "playwright": "^1.60.0"
+    },
+    "devDependencies": {
+        "@apify/tsconfig": "^0.1.0",
+        "@types/node": "^20.10.0",
+        "eslint": "^9.0.0",
+        "typescript": "^5.3.0",
+        "vitest": "^1.0.0"
+    },
+    "author": "Apify Developer",
+    "license": "Apache-2.0"
+}

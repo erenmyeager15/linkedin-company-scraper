@@ -1,0 +1,74 @@
+{
+    "actorSpecification": 1,
+    "name": "linkedin-company-scraper",
+    "title": "LinkedIn Company Scraper - Profiles & Insights",
+    "description": "Scrape public LinkedIn company pages: name, tagline, description, industry, size, HQ, founded year, website, specialties, followers, and logo. Provide company URLs or names.",
+    "version": "1.0",
+    "dockerfile": "Dockerfile",
+    "input": "../INPUT_SCHEMA.json",
+    "pricingInfo": {
+        "pricingModel": "PAY_PER_EVENT",
+        "pricingPerEvent": {
+            "actorChargeEvents": {
+                "company-scraped": {
+                    "eventTitle": "Company scraped",
+                    "eventDescription": "Charged once for each LinkedIn company profile successfully scraped.",
+                    "eventPriceUsd": 0.004,
+                    "isPrimaryEvent": true,
+                    "isOneTimeEvent": false
+                }
+            }
+        }
+    },
+    "categories": ["BUSINESS", "LEAD_GENERATION", "SOCIAL_MEDIA"],
+    "minMemoryMbytes": 2048,
+    "maxMemoryMbytes": 8192,
+    "defaultRunOptions": {
+        "memoryMbytes": 4096,
+        "timeoutSecs": 43200
+    },
+    "storages": {
+        "dataset": {
+            "actorSpecification": 1,
+            "views": {
+                "companies": {
+                    "title": "Scraped Companies",
+                    "transformation": {
+                        "fields": [
+                            "companyName",
+                            "linkedinUrl",
+                            "website",
+                            "tagline",
+                            "companyDescription",
+                            "industry",
+                            "companySize",
+                            "headquartersLocation",
+                            "foundedYear",
+                            "companyType",
+                            "specialties",
+                            "followerCount",
+                            "employeeCount",
+                            "linkedinVerified",
+                            "logoUrl",
+                            "scrapedAt"
+                        ]
+                    },
+                    "display": {
+                        "component": "table",
+                        "properties": {
+                            "companyName": { "label": "Company Name", "format": "text" },
+                            "linkedinUrl": { "label": "LinkedIn URL", "format": "link" },
+                            "industry": { "label": "Industry", "format": "text" },
+                            "companySize": { "label": "Size", "format": "text" },
+                            "followerCount": { "label": "Followers", "format": "text" },
+                            "headquartersLocation": { "label": "HQ", "format": "text" },
+                            "foundedYear": { "label": "Founded", "format": "text" },
+                            "website": { "label": "Website", "format": "link" },
+                            "scrapedAt": { "label": "Scraped At", "format": "date" }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
