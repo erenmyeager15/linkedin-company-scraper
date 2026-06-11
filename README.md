@@ -1,5 +1,7 @@
 # LinkedIn Company Scraper — Extract Company Profiles & Data
 
+Turn LinkedIn company pages into a structured dataset — company name, industry, size, HQ, founded year, website, specialties, followers, employee counts, and more. This LinkedIn company scraper runs from company URLs or names, scrapes only public pages with no login and no API key, and delivers clean records. Export to JSON, CSV, Excel, or HTML, or pull via the Apify API.
+
 A production-ready Apify Actor that extracts comprehensive company profile data from LinkedIn company pages. Supports both direct URL input and company name search to automatically find and scrape LinkedIn company profiles.
 
 ## What It Extracts
@@ -102,6 +104,14 @@ Example: Scraping 500 company profiles costs $2.00.
 | `proxyConfiguration` | `object` | No | Proxy settings (residential recommended) |
 
 At least one of `companyUrls` or `companyNames` must be provided.
+
+## How to Scrape LinkedIn Companies (Step by Step)
+
+1. Click **Try for free** / **Run**.
+2. Paste LinkedIn company URLs (e.g. `https://www.linkedin.com/company/microsoft/`), or add company names to search.
+3. Set **Max Results per Search** if you're searching by name — start small to test.
+4. Keep the recommended residential proxy setting, then click **Run**.
+5. When the run finishes, export your data as JSON, CSV, Excel, or HTML, or pull it via the Apify API.
 
 ## Ethics & Legal Notice
 
