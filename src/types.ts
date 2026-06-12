@@ -27,13 +27,7 @@ export interface CompanyRecord {
     specialties: string[];
     followerCount: string | null;
     employeeCount: string | null;
-    linkedinVerified: boolean;
+    linkedinVerified: boolean | null;
     logoUrl: string | null;
-    bannerImageUrl: string | null;
-    associatedMembersCount: string | null;
-    recentPostsCount: string | null;
-    fundingInfo: string | null;
-    stockSymbol: string | null;
-    affiliatedCompanies: string[];
     scrapedAt: string;
 }

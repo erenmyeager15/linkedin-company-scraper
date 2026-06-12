@@ -1,139 +1,99 @@
-# LinkedIn Company Scraper — Extract Company Profiles & Data
+# LinkedIn Company Pages Scraper
 
-Turn LinkedIn company pages into a structured dataset — company name, industry, size, HQ, founded year, website, specialties, followers, employee counts, and more. This LinkedIn company scraper runs from company URLs or names, scrapes only public pages with no login and no API key, and delivers clean records. Export to JSON, CSV, Excel, or HTML, or pull via the Apify API.
+Extract structured company data from public LinkedIn company pages. Provide direct LinkedIn company URLs to collect company names, websites, descriptions, industries, employee ranges, headquarters, founded years, company types, specialties, follower counts, public employee counts, logos, and profile URLs.
 
-A production-ready Apify Actor that extracts comprehensive company profile data from LinkedIn company pages. Supports both direct URL input and company name search to automatically find and scrape LinkedIn company profiles.
+The Actor uses a browser with residential proxy support, session rotation, retries, and conservative concurrency. It saves only records that contain a company name plus meaningful public profile data. Missing values remain `null`; the Actor does not invent data or access private LinkedIn content.
 
-## What It Extracts
+Direct company URLs are the reliable input method. Company-name search is available as a best-effort beta because LinkedIn may require authentication for search pages.
+
+## Output fields
 
 | Field | Description |
 |---|---|
-| Company Name | Official company name |
-| LinkedIn URL | Canonical LinkedIn company profile URL |
-| Website | Company website URL |
-| Tagline | Company tagline or subtitle |
-| Company Description | Full company description text |
-| Industry | Industry classification |
-| Company Size | Employee count range |
-| Headquarters Location | HQ address |
-| Founded Year | Year the company was established |
-| Company Type | Public / Private / Nonprofit / Partnership / Government |
-| Specialties | List of company specialties |
-| Follower Count | Number of LinkedIn followers |
-| Employee Count | Number of employees on LinkedIn |
-| LinkedIn Verified | Whether the profile is verified |
-| Logo URL | Company logo image URL |
-| Banner Image URL | Company banner/cover image URL |
-| Associated Members | Public count of associated members |
-| Recent Posts Count | Number of recent posts |
-| Funding Info | Funding details if available |
-| Stock Symbol | Stock ticker if publicly traded |
-| Affiliated Companies | Parent companies and subsidiaries |
-| Scraped At | ISO timestamp of extraction |
+| `companyName` | Public company name |
+| `linkedinUrl` | Canonical LinkedIn company URL |
+| `website` | Public company website |
+| `tagline` | Public profile tagline, when exposed |
+| `companyDescription` | Public company description |
+| `industry` | LinkedIn industry |
+| `companySize` | Published employee-size range |
+| `headquartersLocation` | Published headquarters location |
+| `foundedYear` | Published founding year |
+| `companyType` | Public, private, nonprofit, or other published type |
+| `specialties` | Published company specialties |
+| `followerCount` | Public follower count |
+| `employeeCount` | Public employee count when exposed in page metadata |
+| `linkedinVerified` | `true` only when an explicit verification badge is visible; otherwise `null` |
+| `logoUrl` | Public company logo URL |
+| `scrapedAt` | ISO extraction timestamp |
 
-## How It Works
+## Input
 
-1. Accepts LinkedIn company URLs or company names as input
-2. For name searches, queries LinkedIn search to find matching company profiles
-3. Navigates to each company profile page
-4. Extracts all publicly available profile fields
-5. Deduplicates results by LinkedIn URL
-6. Saves records to Apify Dataset with per-record PPE charging
+```json
+{
+  "companyUrls": [
+    "https://www.linkedin.com/company/microsoft"
+  ],
+  "companyNames": [],
+  "maxResults": 5,
+  "proxyConfiguration": {
+    "useApifyProxy": true,
+    "apifyProxyGroups": ["RESIDENTIAL"]
+  }
+}
+```
 
-## Features
-
-- **Dual input mode**: Direct URLs or company name search
-- **Deduplication**: Automatically deduplicates by LinkedIn URL
-- **Anti-bot protection**: Residential proxy rotation, session pooling (max 10 uses), random delays 3-7s, retry on blocked
-- **Pay-per-event**: $0.004 per company profile scraped
-- **No login required**: Scrapes only publicly available data
-- **Null fallbacks**: Gracefully handles missing fields
-
-## 5 Use Cases
-
-1. **B2B Sales Prospecting** — Build enriched prospect lists with company size, industry, and location data for targeted outreach campaigns
-2. **Competitor Intelligence** — Track competitor profiles, follower growth, specialties, and recent activity to inform strategy
-3. **Market Research** — Aggregate industry data, company sizes, and geographic distribution for market analysis reports
-4. **Investor Due Diligence** — Pull company descriptions, funding info, stock symbols, and affiliated companies for investment research
-5. **Recruitment Targeting** — Identify companies by size, industry, and location to optimize recruitment outreach efforts
-
-## Sample Output
+## Sample output
 
 ```json
 {
   "companyName": "Microsoft",
   "linkedinUrl": "https://www.linkedin.com/company/microsoft",
-  "website": "https://www.microsoft.com",
-  "tagline": "Empowering every person and every organization on the planet to achieve more",
-  "companyDescription": "Microsoft Corporation is an American multinational technology corporation...",
-  "industry": "Computer Software",
+  "website": "https://news.microsoft.com/",
+  "tagline": null,
+  "companyDescription": "Every company has a mission. What's ours? To empower every person and every organization to achieve more.",
+  "industry": "Software Development",
   "companySize": "10,001+ employees",
-  "headquartersLocation": "Redmond, WA",
-  "foundedYear": "1975",
-  "companyType": "Public",
-  "specialties": ["Cloud Computing", "Software", "AI", "Enterprise Solutions"],
-  "followerCount": "23,500,000",
-  "employeeCount": "221,000",
-  "linkedinVerified": true,
+  "headquartersLocation": "Redmond, Washington, US",
+  "foundedYear": null,
+  "companyType": "Public Company",
+  "specialties": ["Business Software", "Developer Tools"],
+  "followerCount": "28,327,871",
+  "employeeCount": "232340",
+  "linkedinVerified": null,
   "logoUrl": "https://media.licdn.com/dms/image/...",
-  "bannerImageUrl": "https://media.licdn.com/dms/image/...",
-  "associatedMembersCount": "1,200,000",
-  "recentPostsCount": "47",
-  "fundingInfo": null,
-  "stockSymbol": "NASDAQ: MSFT",
-  "affiliatedCompanies": ["LinkedIn", "GitHub", "Activision Blizzard"],
-  "scrapedAt": "2026-06-10T12:00:00.000Z"
+  "scrapedAt": "2026-06-12T14:00:00.000Z"
 }
 ```
 
+## How to scrape LinkedIn company pages
+
+1. Open the Actor input.
+2. Add one or more direct LinkedIn company URLs.
+3. Keep residential proxy rotation enabled.
+4. Run the Actor.
+5. Export the dataset as JSON, CSV, Excel, or another supported format.
+
+## Use cases
+
+- B2B company research and lead enrichment
+- Market and competitor analysis
+- Industry and geographic segmentation
+- Recruitment account research
+- Public company directory enrichment
+
 ## Pricing
 
-| Event | Price | Description |
-|---|---|---|
-| Company Profile Scraped | $0.004 | Charged after each successful company profile extraction |
+| Event | Price |
+|---|---|
+| `company-scraped` | $0.004 per successfully saved company profile |
 
-Example: Scraping 500 company profiles costs $2.00.
+The Actor charges only after a usable company record is saved. Apify platform usage is billed separately.
 
-## Input Configuration
+## Responsible use
 
-| Field | Type | Required | Description |
-|---|---|---|---|
-| `companyUrls` | `string[]` | No | Direct LinkedIn company profile URLs |
-| `companyNames` | `string[]` | No | Company names to search for on LinkedIn |
-| `maxResults` | `number` | No | Max results per name search (default: 5, max: 100) |
-| `proxyConfiguration` | `object` | No | Proxy settings (residential recommended) |
+This Actor reads only publicly accessible company-page data. It does not use LinkedIn credentials or access private profiles. Users are responsible for complying with LinkedIn's terms, privacy requirements, and applicable laws.
 
-At least one of `companyUrls` or `companyNames` must be provided.
+## License
 
-## How to Scrape LinkedIn Companies (Step by Step)
-
-1. Click **Try for free** / **Run**.
-2. Paste LinkedIn company URLs (e.g. `https://www.linkedin.com/company/microsoft/`), or add company names to search.
-3. Set **Max Results per Search** if you're searching by name — start small to test.
-4. Keep the recommended residential proxy setting, then click **Run**.
-5. When the run finishes, export your data as JSON, CSV, Excel, or HTML, or pull it via the Apify API.
-
-## Ethics & Legal Notice
-
-This Actor scrapes **only publicly available data** from LinkedIn company profiles. It does not:
-- Access private or authenticated content
-- Store or use login credentials
-- Circumvent LinkedIn's access controls
-
-Users are responsible for ensuring their use of this data complies with LinkedIn's Terms of Service, applicable data protection regulations (GDPR, CCPA, etc.), and local laws. This tool is intended for legitimate business intelligence, research, and prospecting purposes.
-
-## Proxy Configuration
-
-Residential proxies are **strongly recommended** for LinkedIn scraping. The Actor defaults to Apify's RESIDENTIAL proxy group with US country routing. You can configure:
-
-- Proxy groups (RESIDENTIAL, DATACENTER, etc.)
-- Country code for geo-targeting
-- Custom proxy endpoints
-
-## Rate Limiting
-
-The Actor implements strict anti-detection measures:
-- Random delays between 3-7 seconds per request
-- Session pool with max 10 uses per session
-- Automatic retry on blocked requests (up to 3 retries)
-- Max concurrency of 3 to avoid detection
+Apache-2.0

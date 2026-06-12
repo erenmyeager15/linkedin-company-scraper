@@ -1,4 +1,9 @@
 {
-    "companyNames": ["Microsoft", "Google"],
-    "maxResults": 5
+    "companyUrls": ["https://www.linkedin.com/company/microsoft"],
+    "companyNames": [],
+    "maxResults": 1,
+    "proxyConfiguration": {
+        "useApifyProxy": true,
+        "apifyProxyGroups": ["RESIDENTIAL"]
+    }
 }

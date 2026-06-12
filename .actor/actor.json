@@ -20,7 +20,7 @@
             }
         }
     },
-    "categories": ["BUSINESS", "LEAD_GENERATION", "SOCIAL_MEDIA"],
+    "categories": ["LEAD_GENERATION", "SOCIAL_MEDIA", "OTHER"],
     "minMemoryMbytes": 2048,
     "maxMemoryMbytes": 8192,
     "defaultRunOptions": {
@@ -58,12 +58,19 @@
                         "properties": {
                             "companyName": { "label": "Company Name", "format": "text" },
                             "linkedinUrl": { "label": "LinkedIn URL", "format": "link" },
+                            "website": { "label": "Website", "format": "link" },
+                            "tagline": { "label": "Tagline", "format": "text" },
+                            "companyDescription": { "label": "Company Description", "format": "text" },
                             "industry": { "label": "Industry", "format": "text" },
                             "companySize": { "label": "Size", "format": "text" },
-                            "followerCount": { "label": "Followers", "format": "text" },
                             "headquartersLocation": { "label": "HQ", "format": "text" },
                             "foundedYear": { "label": "Founded", "format": "text" },
-                            "website": { "label": "Website", "format": "link" },
+                            "companyType": { "label": "Company Type", "format": "text" },
+                            "specialties": { "label": "Specialties", "format": "array" },
+                            "followerCount": { "label": "Followers", "format": "text" },
+                            "employeeCount": { "label": "Employee Count", "format": "text" },
+                            "linkedinVerified": { "label": "LinkedIn Verified", "format": "boolean" },
+                            "logoUrl": { "label": "Logo URL", "format": "image" },
                             "scrapedAt": { "label": "Scraped At", "format": "date" }
                         }
                     }

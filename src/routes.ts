@@ -25,14 +25,8 @@ export const routeHandlers = {
             specialties: [],
             followerCount: null,
             employeeCount: null,
-            linkedinVerified: false,
+            linkedinVerified: null,
             logoUrl: null,
-            bannerImageUrl: null,
-            associatedMembersCount: null,
-            recentPostsCount: null,
-            fundingInfo: null,
-            stockSymbol: null,
-            affiliatedCompanies: [],
             scrapedAt: new Date().toISOString(),
         };
 
@@ -77,14 +71,23 @@ export const routeHandlers = {
             result.description = result.description ?? og('og:description');
             result.logo = result.logo ?? og('og:image');
 
+            const textOf = (selector: string): string | null => {
+                const text = document.querySelector(selector)?.textContent?.trim();
+                return text || null;
+            };
+            result.tagline = textOf('.org-top-card-summary__tagline')
+                ?? textOf('[data-test-id="about-us__tagline"]');
+
             // Guest "about" definition list (dt/dd) for industry, size, HQ, founded, specialties, type
-            const dl = document.querySelector('dl');
-            if (dl) {
+            const lists = Array.from(document.querySelectorAll('dl'));
+            for (const dl of lists) {
                 const terms = Array.from(dl.querySelectorAll('dt'));
-                const defs = Array.from(dl.querySelectorAll('dd'));
-                for (let i = 0; i < terms.length; i++) {
-                    const label = (terms[i].textContent || '').trim().toLowerCase();
-                    const value = (defs[i]?.textContent || '').trim();
+                for (const term of terms) {
+                    const label = (term.textContent || '').trim().toLowerCase();
+                    const definition = term.nextElementSibling?.tagName === 'DD'
+                        ? term.nextElementSibling
+                        : null;
+                    const value = (definition?.textContent || '').trim();
                     if (!label || !value) continue;
                     if (label.includes('website')) result.website = result.website ?? value;
                     else if (label.includes('industry')) result.industry = value;
@@ -95,16 +98,21 @@ export const routeHandlers = {
                     else if (label.includes('specialties')) result.specialties = value;
                 }
             }
-            void dl;
 
             // Followers (guest page subline)
             const ft = document.body.innerText.match(/([\d,.]+[KMB]?)\s+followers/i);
             result.followers = ft ? ft[1] : null;
 
+            result.verified = !!document.querySelector(
+                '[aria-label*="verified" i], [title*="verified" i], [data-test-id*="verified" i]'
+            );
+
             return result;
         });
 
         record.companyName = extracted.name ?? null;
+        record.linkedinUrl = page.url().split('?')[0].replace(/\/$/, '');
+        record.tagline = extracted.tagline ?? null;
         record.companyDescription = extracted.description ?? null;
         record.website = extracted.website ?? null;
         record.logoUrl = extracted.logo && !String(extracted.logo).startsWith('data:') ? extracted.logo : null;
@@ -115,6 +123,7 @@ export const routeHandlers = {
         record.companyType = extracted.type ?? null;
         record.employeeCount = extracted.employees ?? null;
         record.followerCount = extracted.followers ?? null;
+        record.linkedinVerified = extracted.verified ? true : null;
         if (extracted.specialties) {
             record.specialties = String(extracted.specialties).split(/[,•·]/).map((s: string) => s.trim()).filter(Boolean);
         }
