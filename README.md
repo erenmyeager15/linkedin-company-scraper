@@ -1,6 +1,6 @@
 # LinkedIn Company Pages Scraper
 
-Extract structured company data from public LinkedIn company pages. Provide direct LinkedIn company URLs to collect company names, websites, descriptions, industries, employee ranges, headquarters, founded years, company types, specialties, follower counts, public employee counts, logos, and profile URLs.
+Extract structured company data from public LinkedIn company pages. Provide direct LinkedIn company URLs to collect company names, websites, descriptions, industries, employee ranges, headquarters, company types, specialties, follower counts, public employee counts, logos, and profile URLs.
 
 The Actor uses a browser with residential proxy support, session rotation, retries, and conservative concurrency. It saves only records that contain a company name plus meaningful public profile data. Missing values remain `null`; the Actor does not invent data or access private LinkedIn content.
 
@@ -13,17 +13,14 @@ Direct company URLs are the reliable input method. Company-name search is availa
 | `companyName` | Public company name |
 | `linkedinUrl` | Canonical LinkedIn company URL |
 | `website` | Public company website |
-| `tagline` | Public profile tagline, when exposed |
 | `companyDescription` | Public company description |
 | `industry` | LinkedIn industry |
 | `companySize` | Published employee-size range |
 | `headquartersLocation` | Published headquarters location |
-| `foundedYear` | Published founding year |
 | `companyType` | Public, private, nonprofit, or other published type |
 | `specialties` | Published company specialties |
 | `followerCount` | Public follower count |
 | `employeeCount` | Public employee count when exposed in page metadata |
-| `linkedinVerified` | `true` only when an explicit verification badge is visible; otherwise `null` |
 | `logoUrl` | Public company logo URL |
 | `scrapedAt` | ISO extraction timestamp |
 
@@ -50,17 +47,14 @@ Direct company URLs are the reliable input method. Company-name search is availa
   "companyName": "Microsoft",
   "linkedinUrl": "https://www.linkedin.com/company/microsoft",
   "website": "https://news.microsoft.com/",
-  "tagline": null,
   "companyDescription": "Every company has a mission. What's ours? To empower every person and every organization to achieve more.",
   "industry": "Software Development",
   "companySize": "10,001+ employees",
   "headquartersLocation": "Redmond, Washington, US",
-  "foundedYear": null,
   "companyType": "Public Company",
   "specialties": ["Business Software", "Developer Tools"],
   "followerCount": "28,327,871",
   "employeeCount": "232340",
-  "linkedinVerified": null,
   "logoUrl": "https://media.licdn.com/dms/image/...",
   "scrapedAt": "2026-06-12T14:00:00.000Z"
 }

@@ -17,17 +17,14 @@ export interface CompanyRecord {
     companyName: string | null;
     linkedinUrl: string;
     website: string | null;
-    tagline: string | null;
     companyDescription: string | null;
     industry: string | null;
     companySize: string | null;
     headquartersLocation: string | null;
-    foundedYear: string | null;
     companyType: string | null;
     specialties: string[];
     followerCount: string | null;
     employeeCount: string | null;
-    linkedinVerified: boolean | null;
     logoUrl: string | null;
     scrapedAt: string;
 }

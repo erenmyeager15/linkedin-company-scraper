@@ -15,17 +15,14 @@ export const routeHandlers = {
             companyName: null,
             linkedinUrl: url,
             website: null,
-            tagline: null,
             companyDescription: null,
             industry: null,
             companySize: null,
             headquartersLocation: null,
-            foundedYear: null,
             companyType: null,
             specialties: [],
             followerCount: null,
             employeeCount: null,
-            linkedinVerified: null,
             logoUrl: null,
             scrapedAt: new Date().toISOString(),
         };
@@ -60,6 +57,7 @@ export const routeHandlers = {
                         if (data.numberOfEmployees) {
                             result.employees = String(data.numberOfEmployees.value ?? data.numberOfEmployees);
                         }
+                        if (data.foundingDate) result.founded = String(data.foundingDate);
                         break;
                     }
                 } catch { /* ignore bad JSON-LD */ }
@@ -103,27 +101,20 @@ export const routeHandlers = {
             const ft = document.body.innerText.match(/([\d,.]+[KMB]?)\s+followers/i);
             result.followers = ft ? ft[1] : null;
 
-            result.verified = !!document.querySelector(
-                '[aria-label*="verified" i], [title*="verified" i], [data-test-id*="verified" i]'
-            );
-
             return result;
         });
 
         record.companyName = extracted.name ?? null;
         record.linkedinUrl = page.url().split('?')[0].replace(/\/$/, '');
-        record.tagline = extracted.tagline ?? null;
         record.companyDescription = extracted.description ?? null;
         record.website = extracted.website ?? null;
         record.logoUrl = extracted.logo && !String(extracted.logo).startsWith('data:') ? extracted.logo : null;
         record.industry = extracted.industry ?? null;
         record.companySize = extracted.size ?? null;
         record.headquartersLocation = extracted.hq ?? null;
-        record.foundedYear = extracted.founded ?? null;
         record.companyType = extracted.type ?? null;
         record.employeeCount = extracted.employees ?? null;
         record.followerCount = extracted.followers ?? null;
-        record.linkedinVerified = extracted.verified ? true : null;
         if (extracted.specialties) {
             record.specialties = String(extracted.specialties).split(/[,•·]/).map((s: string) => s.trim()).filter(Boolean);
         }
