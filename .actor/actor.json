@@ -20,7 +20,7 @@
             }
         }
     },
-    "categories": ["LEAD_GENERATION", "SOCIAL_MEDIA", "OTHER"],
+    "categories": ["SOCIAL_MEDIA", "OTHER"],
     "minMemoryMbytes": 2048,
     "maxMemoryMbytes": 8192,
     "defaultRunOptions": {
