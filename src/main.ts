@@ -1,8 +1,10 @@
 import { Actor, log } from 'apify';
-import { PlaywrightCrawler } from 'crawlee';
+import { HttpCrawler, PlaywrightCrawler, type HttpCrawlingContext, type RequestOptions } from 'crawlee';
 import { routeHandlers } from './routes.js';
+import { handleHttpCompanyProfile } from './http-routes.js';
 import {
     candidateUrls,
+    canSaveMore,
     clampMaxResults,
     createBudget,
     MAX_SLUG_CANDIDATES,
@@ -106,7 +108,45 @@ await Actor.main(async () => {
         log.warning('Running without Apify Proxy. LinkedIn blocks datacenter IPs, so results are likely to be empty.');
     }
 
-    const crawler = new PlaywrightCrawler({
+    const browserFallbackRequests: RequestOptions[] = [];
+    const browserFallbackUrls = new Set<string>();
+    const scheduleBrowserFallback = (request: { url: string; userData: Record<string, unknown> }): void => {
+        if (browserFallbackUrls.has(request.url)) return;
+        browserFallbackUrls.add(request.url);
+        browserFallbackRequests.push(request);
+    };
+    const initialRequests = [...directRequests, ...cappedNameRequests];
+
+    const httpCrawler = new HttpCrawler({
+        proxyConfiguration,
+        useSessionPool: true,
+        maxConcurrency: 10,
+        requestHandlerTimeoutSecs: 45,
+        maxRequestRetries: 2,
+        retryOnBlocked: true,
+        maxRequestsPerCrawl: directRequests.length + cappedNameRequests.length * MAX_SLUG_CANDIDATES + 10,
+        sessionPoolOptions: {
+            maxPoolSize: 20,
+            sessionOptions: { maxAgeSecs: 1800, maxUsageCount: 10 },
+        },
+        requestHandler: async (context) => handleHttpCompanyProfile(
+            context as unknown as HttpCrawlingContext,
+            scheduleBrowserFallback,
+        ),
+        failedRequestHandler: async ({ request, log: ctxLog, session }, error) => {
+            ctxLog.warning(`HTTP-first request exhausted retries; scheduling browser fallback: ${request.url}`, {
+                error: (error as Error)?.message ?? 'Unknown error',
+            });
+            session?.retire();
+            scheduleBrowserFallback({ url: request.url, userData: request.userData });
+        },
+    });
+
+    await httpCrawler.run(initialRequests);
+
+    if (browserFallbackRequests.length > 0 && canSaveMore(budget)) {
+        log.info(`Starting browser fallback for ${browserFallbackRequests.length} unresolved target(s).`);
+        const crawler = new PlaywrightCrawler({
         proxyConfiguration,
         useSessionPool: true,
         // Two pages keep peak memory inside the 1 GB tier, which is the cheapest
@@ -172,7 +212,8 @@ await Actor.main(async () => {
         },
     });
 
-    await crawler.run([...directRequests, ...cappedNameRequests]);
+        await crawler.run(browserFallbackRequests);
+    }
 
     log.info('Actor finished', {
         companiesSaved: budget.pushed,

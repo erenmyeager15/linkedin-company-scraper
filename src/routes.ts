@@ -1,7 +1,7 @@
 import { PlaywrightCrawlingContext } from 'crawlee';
 import { Actor } from 'apify';
+import { extractCompanyHtml } from './extract.js';
 import {
-    BLOCK_TEXT_MARKERS,
     canSaveMore,
     hasUsableCompanyData,
     isAlreadySaved,
@@ -77,76 +77,7 @@ export const routeHandlers = {
         // Public LinkedIn company pages embed an Organization JSON-LD block plus a
         // guest "about" definition list. These are far more reliable than the
         // logged-in .org-top-card selectors.
-        const extracted = await page.evaluate((blockMarkers: string[]) => {
-            /* eslint-disable @typescript-eslint/no-explicit-any */
-            const result: Record<string, any> = {};
-
-            // JSON-LD Organization
-            const scripts = Array.from(document.querySelectorAll('script[type="application/ld+json"]'));
-            for (const s of scripts) {
-                try {
-                    let data: any = JSON.parse(s.textContent || '{}');
-                    const graph = data['@graph'];
-                    if (Array.isArray(graph)) {
-                        data = graph.find((g: any) => /Organization/i.test(g['@type'])) ?? data;
-                    }
-                    const types = Array.isArray(data['@type']) ? data['@type'].join(' ') : (data['@type'] ?? '');
-                    if (/Organization/i.test(types)) {
-                        result.name = data.name ?? null;
-                        result.description = data.description ?? null;
-                        result.logo = (typeof data.logo === 'string' ? data.logo : data.logo?.url) ?? null;
-                        const sameAs = Array.isArray(data.sameAs) ? data.sameAs[0] : data.sameAs;
-                        result.website = data.url && !/linkedin\.com/i.test(data.url) ? data.url : (sameAs ?? null);
-                        if (data.address) {
-                            const a = data.address;
-                            result.hq = [a.addressLocality, a.addressRegion, a.addressCountry].filter(Boolean).join(', ') || null;
-                        }
-                        if (data.numberOfEmployees) {
-                            result.employees = String(data.numberOfEmployees.value ?? data.numberOfEmployees);
-                        }
-                        if (data.foundingDate) result.founded = String(data.foundingDate);
-                        break;
-                    }
-                } catch { /* ignore bad JSON-LD */ }
-            }
-
-            // og: meta fallbacks
-            const og = (p: string): string | null => document.querySelector(`meta[property="${p}"]`)?.getAttribute('content') ?? null;
-            result.name = result.name ?? og('og:title');
-            result.description = result.description ?? og('og:description');
-            result.logo = result.logo ?? og('og:image');
-
-            // Guest "about" definition list (dt/dd) for industry, size, HQ, founded, specialties, type
-            const lists = Array.from(document.querySelectorAll('dl'));
-            for (const dl of lists) {
-                const terms = Array.from(dl.querySelectorAll('dt'));
-                for (const term of terms) {
-                    const label = (term.textContent || '').trim().toLowerCase();
-                    const definition = term.nextElementSibling?.tagName === 'DD'
-                        ? term.nextElementSibling
-                        : null;
-                    const value = (definition?.textContent || '').trim();
-                    if (!label || !value) continue;
-                    if (label.includes('website')) result.website = result.website ?? value;
-                    else if (label.includes('industry')) result.industry = value;
-                    else if (label.includes('size')) result.size = value;
-                    else if (label.includes('headquarters')) result.hq = result.hq ?? value;
-                    else if (label.includes('founded')) result.founded = value;
-                    else if (label.includes('type')) result.type = value;
-                    else if (label.includes('specialties')) result.specialties = value;
-                }
-            }
-
-            // Followers (guest page subline)
-            const bodyText = document.body?.innerText || '';
-            const ft = bodyText.match(/([\d,.]+[KMB]?)\s+followers/i);
-            result.followers = ft ? ft[1] : null;
-
-            const lowerBody = bodyText.toLowerCase();
-            result.blocked = blockMarkers.some((marker) => lowerBody.includes(marker));
-
-            return result;
-        }, BLOCK_TEXT_MARKERS);
+        const extracted = extractCompanyHtml(await page.content());
 
         record.companyName = extracted.name ?? null;
         record.linkedinUrl = page.url().split('?')[0].replace(/\/$/, '');

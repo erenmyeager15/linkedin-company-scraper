@@ -4,7 +4,9 @@
 
 Extract structured company data from public LinkedIn company pages. Provide direct LinkedIn company URLs to collect company names, websites, descriptions, industries, employee ranges, headquarters, company types, specialties, follower counts, public employee counts, logos, and profile URLs.
 
-The Actor uses a browser with residential proxy support, session rotation, retries, and conservative concurrency. It saves only records that contain a company name plus meaningful public profile data. Missing values remain `null`; the Actor does not invent data or access private LinkedIn content.
+The Actor uses an HTTP-first extraction path for speed and lower platform cost, with a bounded browser fallback only when a public page cannot be read reliably over HTTP.
+
+The Actor uses residential proxy support, session rotation, retries, and bounded concurrency. Browser fallback is used only when the HTTP-first path cannot reliably read a public page. It saves only records that contain a company name plus meaningful public profile data. Missing values remain `null`; the Actor does not invent data or access private LinkedIn content.
 
 Direct company URLs are the most precise input method. Company names are resolved to their public LinkedIn company page without login, which works reliably for well-known names and may not resolve ambiguous or heavily abbreviated ones.
 

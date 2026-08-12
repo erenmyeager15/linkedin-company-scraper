@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { extractCompanyHtml } from './extract.js';
 import {
     candidateUrls,
     canSaveMore,
@@ -21,6 +22,33 @@ import {
     releaseSave,
     reserveSave,
 } from './lib.js';
+
+test('HTTP HTML extraction preserves structured public company fields', () => {
+    const html = `<!doctype html><html><head>
+        <meta property="og:title" content="Fallback Name">
+        <script type="application/ld+json">{
+            "@type":"Organization",
+            "name":"Acme",
+            "description":"Public company description",
+            "url":"https://www.linkedin.com/company/acme",
+            "sameAs":["https://acme.example"],
+            "foundingDate":"2012",
+            "numberOfEmployees":{"value":250}
+        }</script>
+    </head><body><dl>
+        <dt>Industry</dt><dd>Software</dd>
+        <dt>Specialties</dt><dd>Analytics; Automation</dd>
+    </dl><p>12,345 followers</p></body></html>`;
+
+    const record = extractCompanyHtml(html);
+    assert.equal(record.name, 'Acme');
+    assert.equal(record.website, 'https://acme.example');
+    assert.equal(record.industry, 'Software');
+    assert.equal(record.specialties, 'Analytics; Automation');
+    assert.equal(record.followers, '12,345');
+    assert.equal(record.employees, '250');
+    assert.equal(record.blocked, false);
+});
 
 test('founding dates are normalized without inventing a year', () => {
     assert.equal(parseFoundedYear('Founded 1975'), 1975);
