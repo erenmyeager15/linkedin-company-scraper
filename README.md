@@ -1,5 +1,7 @@
 # LinkedIn Company Pages Scraper
 
+> **Unofficial Actor.** This tool is independent and is **not affiliated with, endorsed by, or sponsored by LinkedIn**. It collects only publicly available company page data and never uses LinkedIn credentials, cookies, or private APIs.
+
 Extract structured company data from public LinkedIn company pages. Provide direct LinkedIn company URLs to collect company names, websites, descriptions, industries, employee ranges, headquarters, company types, specialties, follower counts, public employee counts, logos, and profile URLs.
 
 The Actor uses a browser with residential proxy support, session rotation, retries, and conservative concurrency. It saves only records that contain a company name plus meaningful public profile data. Missing values remain `null`; the Actor does not invent data or access private LinkedIn content.

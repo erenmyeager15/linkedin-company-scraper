@@ -5,7 +5,12 @@
     "description": "Scrape public LinkedIn company pages: name, description, industry, size, HQ, company type, website, specialties, followers, employee count, and logo. Provide company URLs or names.",
     "version": "1.0",
     "dockerfile": "Dockerfile",
+    "readme": "../README.md",
     "input": "../INPUT_SCHEMA.json",
+    "exampleRunInput": {
+        "contentType": "application/json; charset=utf-8",
+        "body": "{\"companyUrls\":[\"https://www.linkedin.com/company/microsoft\"],\"companyNames\":[\"Stripe\"],\"maxResults\":5,\"proxyConfiguration\":{\"useApifyProxy\":true,\"apifyProxyGroups\":[\"RESIDENTIAL\"],\"apifyProxyCountry\":\"US\"}}"
+    },
     "pricingInfo": {
         "pricingModel": "PAY_PER_EVENT",
         "pricingPerEvent": {
