@@ -18,7 +18,7 @@
                 "company-scraped": {
                     "eventTitle": "Company scraped",
                     "eventDescription": "Charged once for each LinkedIn company profile successfully scraped.",
-                    "eventPriceUsd": 0.004,
+                    "eventPriceUsd": 0.003,
                     "isPrimaryEvent": true,
                     "isOneTimeEvent": false
                 }
