@@ -2,12 +2,12 @@ import { Actor, log } from 'apify';
 import { PlaywrightCrawler } from 'crawlee';
 import { routeHandlers } from './routes.js';
 import {
-    BLOCKED_RESOURCE_PATTERNS,
     candidateUrls,
     clampMaxResults,
     createBudget,
     MAX_SLUG_CANDIDATES,
     normalizeCompanyUrl,
+    shouldAllowResource,
 } from './lib.js';
 import { setBudget } from './state.js';
 import type { ActorInput } from './types.js';
@@ -134,14 +134,18 @@ await Actor.main(async () => {
         },
 
         preNavigationHooks: [
-            async ({ page, blockRequests }) => {
-                // Images, media and fonts are pure residential-proxy bandwidth for
-                // markup-only extraction. Stylesheets are kept so text visibility
-                // stays accurate for block detection.
-                await blockRequests({ urlPatterns: BLOCKED_RESOURCE_PATTERNS })
-                    .catch(() => { /* best effort */ });
+            async ({ page }) => {
+                // Fetch only the HTML document. LinkedIn's scripts alone were several
+                // megabytes of residential bandwidth per company page.
+                await page.route('**/*', async (route) => {
+                    if (shouldAllowResource(route.request().resourceType())) {
+                        await route.continue().catch(() => { /* navigation already settled */ });
+                    } else {
+                        await route.abort().catch(() => { /* navigation already settled */ });
+                    }
+                }).catch(() => { /* best effort */ });
                 page.setDefaultTimeout(8000);
-                const delay = Math.floor(Math.random() * 4000) + 3000;
+                const delay = Math.floor(Math.random() * 1500) + 1000;
                 await new Promise((resolve) => setTimeout(resolve, delay));
             },
         ],

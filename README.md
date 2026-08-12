@@ -82,7 +82,7 @@ A company is saved and charged only when the page yields a company name plus at 
 
 | Event | Price |
 |---|---|
-| `company-scraped` | $0.004 per successfully saved company profile |
+| `company-scraped` | $0.003 per successfully saved company profile ($3.00 per 1,000) |
 
 The Actor charges only after a usable company record is saved. Apify platform usage is billed separately.
 

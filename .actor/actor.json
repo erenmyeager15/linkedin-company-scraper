@@ -13,7 +13,7 @@
                 "company-scraped": {
                     "eventTitle": "Company scraped",
                     "eventDescription": "Charged once for each LinkedIn company profile successfully scraped.",
-                    "eventPriceUsd": 0.004,
+                    "eventPriceUsd": 0.003,
                     "isPrimaryEvent": true,
                     "isOneTimeEvent": false
                 }
@@ -22,9 +22,9 @@
     },
     "categories": ["SOCIAL_MEDIA", "OTHER"],
     "minMemoryMbytes": 2048,
-    "maxMemoryMbytes": 8192,
+    "maxMemoryMbytes": 4096,
     "defaultRunOptions": {
-        "memoryMbytes": 4096,
+        "memoryMbytes": 2048,
         "timeoutSecs": 43200
     },
     "storages": {
