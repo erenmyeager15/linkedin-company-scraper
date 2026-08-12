@@ -16,10 +16,18 @@ import {
     looksBlockedText,
     nameMatchesCompany,
     normalizeCompanyUrl,
+    parseFoundedYear,
     registerCharge,
     releaseSave,
     reserveSave,
 } from './lib.js';
+
+test('founding dates are normalized without inventing a year', () => {
+    assert.equal(parseFoundedYear('Founded 1975'), 1975);
+    assert.equal(parseFoundedYear('2009-01-01'), 2009);
+    assert.equal(parseFoundedYear('unknown'), null);
+    assert.equal(parseFoundedYear(null), null);
+});
 
 const ACME_URL = 'https://www.linkedin.com/company/acme';
 

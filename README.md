@@ -22,10 +22,12 @@ A company is saved and charged only when the page yields a company name plus at 
 | `companySize` | Published employee-size range |
 | `headquartersLocation` | Published headquarters location |
 | `companyType` | Public, private, nonprofit, or other published type |
+| `foundedYear` | Published founding year when available |
 | `specialties` | Published company specialties |
 | `followerCount` | Public follower count |
 | `employeeCount` | Public employee count when exposed in page metadata |
 | `logoUrl` | Public company logo URL |
+| `matchedFromName` | Original name input when the profile was resolved by name |
 | `scrapedAt` | ISO extraction timestamp |
 
 ## Input
@@ -56,10 +58,12 @@ A company is saved and charged only when the page yields a company name plus at 
   "companySize": "10,001+ employees",
   "headquartersLocation": "Redmond, Washington, US",
   "companyType": "Public Company",
+  "foundedYear": 1975,
   "specialties": ["Business Software", "Developer Tools"],
   "followerCount": "28,327,871",
   "employeeCount": "232340",
   "logoUrl": "https://media.licdn.com/dms/image/...",
+  "matchedFromName": null,
   "scrapedAt": "2026-06-12T14:00:00.000Z"
 }
 ```
@@ -86,7 +90,7 @@ A company is saved and charged only when the page yields a company name plus at 
 |---|---|
 | `company-scraped` | $0.003 per successfully saved company profile ($3.00 per 1,000) |
 
-The Actor charges only after a usable company record is saved. Apify platform usage is billed separately.
+The Actor charges only after a usable company record is saved. Platform usage is included in the event price for users.
 
 ## Responsible use
 

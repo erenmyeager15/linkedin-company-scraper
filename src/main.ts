@@ -15,7 +15,8 @@ import type { ActorInput } from './types.js';
 await Actor.main(async () => {
     const input = (await Actor.getInput()) as ActorInput | null;
     if (!input) {
-        throw new Error('Input is required. Please provide companyUrls or companyNames.');
+        await Actor.setStatusMessage('No company URLs or names provided; nothing to scrape.');
+        return;
     }
 
     const {
@@ -25,7 +26,8 @@ await Actor.main(async () => {
     } = input;
 
     if (companyUrls.length === 0 && companyNames.length === 0) {
-        throw new Error('At least one company URL or company name is required.');
+        await Actor.setStatusMessage('No company URLs or names provided; nothing to scrape.');
+        return;
     }
 
     const maxResults = clampMaxResults(input.maxResults);
@@ -82,7 +84,8 @@ await Actor.main(async () => {
     }
 
     if (directRequests.length + cappedNameRequests.length === 0) {
-        throw new Error('No valid LinkedIn company URLs or resolvable company names were provided.');
+        await Actor.setStatusMessage('No valid LinkedIn company URLs or resolvable company names were provided.');
+        return;
     }
 
     // Each direct URL and each resolved name yields at most one company, so the number

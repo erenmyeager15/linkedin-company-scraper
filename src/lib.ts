@@ -18,6 +18,11 @@ export function shouldAllowResource(resourceType: string): boolean {
     return ALLOWED_RESOURCE_TYPES.includes(resourceType);
 }
 
+export function parseFoundedYear(value: unknown): number | null {
+    const match = String(value ?? '').match(/\b(1[0-9]{3}|20[0-9]{2}|2100)\b/);
+    return match ? Number(match[1]) : null;
+}
+
 /** Canonicalises any LinkedIn company link to its public guest profile URL. */
 export function normalizeCompanyUrl(rawUrl: string): string | null {
     if (!rawUrl?.trim()) return null;

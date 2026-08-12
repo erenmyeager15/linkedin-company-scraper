@@ -22,9 +22,11 @@ export interface CompanyRecord {
     companySize: string | null;
     headquartersLocation: string | null;
     companyType: string | null;
+    foundedYear: number | null;
     specialties: string[];
     followerCount: string | null;
     employeeCount: string | null;
     logoUrl: string | null;
+    matchedFromName: string | null;
     scrapedAt: string;
 }

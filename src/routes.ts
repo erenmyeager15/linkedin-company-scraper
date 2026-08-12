@@ -12,6 +12,7 @@ import {
     looksBlockedText,
     nameMatchesCompany,
     normalizeCompanyUrl,
+    parseFoundedYear,
     registerCharge,
     releaseSave,
     reserveSave,
@@ -64,10 +65,12 @@ export const routeHandlers = {
             companySize: null,
             headquartersLocation: null,
             companyType: null,
+            foundedYear: null,
             specialties: [],
             followerCount: null,
             employeeCount: null,
             logoUrl: null,
+            matchedFromName: searchName ?? null,
             scrapedAt: new Date().toISOString(),
         };
 
@@ -154,10 +157,14 @@ export const routeHandlers = {
         record.companySize = extracted.size ?? null;
         record.headquartersLocation = extracted.hq ?? null;
         record.companyType = extracted.type ?? null;
+        record.foundedYear = parseFoundedYear(extracted.founded);
         record.employeeCount = extracted.employees ?? null;
         record.followerCount = extracted.followers ?? null;
         if (extracted.specialties) {
-            record.specialties = String(extracted.specialties).split(/[,•·]/).map((s: string) => s.trim()).filter(Boolean);
+            record.specialties = String(extracted.specialties)
+                .split(/[,;\u2022\u00b7]/)
+                .map((s: string) => s.trim())
+                .filter(Boolean);
         }
 
         // Blocking is judged before the record is trusted, so a wall can never be saved

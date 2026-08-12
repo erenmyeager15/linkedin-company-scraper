@@ -26,7 +26,7 @@
             }
         }
     },
-    "categories": ["SOCIAL_MEDIA", "OTHER"],
+    "categories": ["LEAD_GENERATION", "SOCIAL_MEDIA", "OTHER"],
     "minMemoryMbytes": 1024,
     "maxMemoryMbytes": 4096,
     "defaultRunOptions": {
@@ -49,10 +49,12 @@
                             "companySize",
                             "headquartersLocation",
                             "companyType",
+                            "foundedYear",
                             "specialties",
                             "followerCount",
                             "employeeCount",
                             "logoUrl",
+                            "matchedFromName",
                             "scrapedAt"
                         ]
                     },
@@ -67,10 +69,12 @@
                             "companySize": { "label": "Size", "format": "text" },
                             "headquartersLocation": { "label": "HQ", "format": "text" },
                             "companyType": { "label": "Company Type", "format": "text" },
+                            "foundedYear": { "label": "Founded", "format": "number" },
                             "specialties": { "label": "Specialties", "format": "array" },
                             "followerCount": { "label": "Followers", "format": "text" },
                             "employeeCount": { "label": "Employee Count", "format": "text" },
                             "logoUrl": { "label": "Logo URL", "format": "image" },
+                            "matchedFromName": { "label": "Matched From Name", "format": "text" },
                             "scrapedAt": { "label": "Scraped At", "format": "date" }
                         }
                     }
