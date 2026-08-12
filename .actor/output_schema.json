@@ -1,0 +1,14 @@
+{
+    "actorOutputSchemaVersion": 1,
+    "title": "LinkedIn Company Scraper Output",
+    "description": "Structured public LinkedIn company records with company names, LinkedIn profile URLs, websites, descriptions, industries, employee size ranges, headquarters locations, company types, specialties, follower counts, public employee counts, logo URLs, and scraped timestamps.",
+    "type": "object",
+    "properties": {
+        "results": {
+            "type": "string",
+            "title": "Public LinkedIn company records",
+            "description": "Clean dataset items containing public LinkedIn company profile, industry, size, headquarters, website, specialty, follower, and logo data. A record is saved only when the page yields a company name plus at least one substantive public field.",
+            "template": "{{links.apiDefaultDatasetUrl}}/items"
+        }
+    }
+}
