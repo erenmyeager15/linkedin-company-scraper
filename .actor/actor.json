@@ -21,10 +21,10 @@
         }
     },
     "categories": ["SOCIAL_MEDIA", "OTHER"],
-    "minMemoryMbytes": 2048,
+    "minMemoryMbytes": 1024,
     "maxMemoryMbytes": 4096,
     "defaultRunOptions": {
-        "memoryMbytes": 2048,
+        "memoryMbytes": 1024,
         "timeoutSecs": 43200
     },
     "storages": {

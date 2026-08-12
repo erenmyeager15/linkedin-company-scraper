@@ -106,7 +106,9 @@ await Actor.main(async () => {
     const crawler = new PlaywrightCrawler({
         proxyConfiguration,
         useSessionPool: true,
-        maxConcurrency: 3,
+        // Two pages keep peak memory inside the 1 GB tier, which is the cheapest
+        // compute unit that still fits a Chromium instance.
+        maxConcurrency: 2,
         requestHandlerTimeoutSecs: 120,
         navigationTimeoutSecs: 120,
         maxRequestRetries: 3,
@@ -134,7 +136,11 @@ await Actor.main(async () => {
         },
 
         preNavigationHooks: [
-            async ({ page }) => {
+            async ({ page }, gotoOptions) => {
+                // Company data is server-rendered, so there is nothing to wait for after
+                // DOMContentLoaded. This cuts paid seconds off every navigation.
+                if (gotoOptions) gotoOptions.waitUntil = 'domcontentloaded';
+
                 // Fetch only the HTML document. LinkedIn's scripts alone were several
                 // megabytes of residential bandwidth per company page.
                 await page.route('**/*', async (route) => {
@@ -144,6 +150,7 @@ await Actor.main(async () => {
                         await route.abort().catch(() => { /* navigation already settled */ });
                     }
                 }).catch(() => { /* best effort */ });
+
                 page.setDefaultTimeout(8000);
                 const delay = Math.floor(Math.random() * 1500) + 1000;
                 await new Promise((resolve) => setTimeout(resolve, delay));

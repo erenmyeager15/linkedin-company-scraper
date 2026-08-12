@@ -53,7 +53,7 @@ export const routeHandlers = {
 
         log.info(`Scraping company profile: ${url}`);
 
-        await page.waitForSelector('h1, script[type="application/ld+json"]', { timeout: 8000 }).catch(() => {});
+        await page.waitForSelector('h1, script[type="application/ld+json"]', { timeout: 5000 }).catch(() => {});
 
         const record: CompanyRecord = {
             companyName: null,
