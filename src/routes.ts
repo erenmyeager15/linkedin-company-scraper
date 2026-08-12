@@ -1,11 +1,55 @@
 import { PlaywrightCrawlingContext } from 'crawlee';
 import { Actor } from 'apify';
+import {
+    BLOCK_TEXT_MARKERS,
+    canSaveMore,
+    hasUsableCompanyData,
+    isAlreadySaved,
+    isBlockedStatus,
+    isBlockedUrl,
+    isFinished,
+    isNameResolved,
+    looksBlockedText,
+    nameMatchesCompany,
+    normalizeCompanyUrl,
+    registerCharge,
+    releaseSave,
+    reserveSave,
+} from './lib.js';
+import { getBudget } from './state.js';
 import type { CompanyRecord } from './types.js';
 
 export const routeHandlers = {
     async handleCompanyProfile(context: PlaywrightCrawlingContext) {
-        const { page, request, log, pushData } = context;
+        const { page, request, response, session, log, pushData, crawler } = context;
         const url = request.url;
+        const budget = getBudget();
+        const searchName = request.userData.searchName as string | undefined;
+        const candidates = (request.userData.candidates as string[] | undefined) ?? [];
+        const candidateIndex = (request.userData.candidateIndex as number | undefined) ?? 0;
+
+        if (!canSaveMore(budget)) {
+            log.info('Company budget reached; skipping remaining profiles.');
+            return;
+        }
+
+        // A name that already resolved must not spend another navigation on a slug guess.
+        if (isNameResolved(budget, searchName)) {
+            log.info(`"${searchName}" already resolved; skipping remaining slug candidates.`);
+            return;
+        }
+
+        const requestedUrl = normalizeCompanyUrl(url);
+        if (requestedUrl && isAlreadySaved(budget, requestedUrl)) {
+            log.info(`${requestedUrl} was already saved in this run; skipping.`);
+            return;
+        }
+
+        const status = response?.status();
+        if (isBlockedStatus(status)) {
+            session?.retire();
+            throw new Error(`LinkedIn returned HTTP ${status} for ${url}.`);
+        }
 
         log.info(`Scraping company profile: ${url}`);
 
@@ -30,7 +74,7 @@ export const routeHandlers = {
         // Public LinkedIn company pages embed an Organization JSON-LD block plus a
         // guest "about" definition list. These are far more reliable than the
         // logged-in .org-top-card selectors.
-        const extracted = await page.evaluate(() => {
+        const extracted = await page.evaluate((blockMarkers: string[]) => {
             /* eslint-disable @typescript-eslint/no-explicit-any */
             const result: Record<string, any> = {};
 
@@ -69,13 +113,6 @@ export const routeHandlers = {
             result.description = result.description ?? og('og:description');
             result.logo = result.logo ?? og('og:image');
 
-            const textOf = (selector: string): string | null => {
-                const text = document.querySelector(selector)?.textContent?.trim();
-                return text || null;
-            };
-            result.tagline = textOf('.org-top-card-summary__tagline')
-                ?? textOf('[data-test-id="about-us__tagline"]');
-
             // Guest "about" definition list (dt/dd) for industry, size, HQ, founded, specialties, type
             const lists = Array.from(document.querySelectorAll('dl'));
             for (const dl of lists) {
@@ -98,11 +135,15 @@ export const routeHandlers = {
             }
 
             // Followers (guest page subline)
-            const ft = document.body.innerText.match(/([\d,.]+[KMB]?)\s+followers/i);
+            const bodyText = document.body?.innerText || '';
+            const ft = bodyText.match(/([\d,.]+[KMB]?)\s+followers/i);
             result.followers = ft ? ft[1] : null;
 
+            const lowerBody = bodyText.toLowerCase();
+            result.blocked = blockMarkers.some((marker) => lowerBody.includes(marker));
+
             return result;
-        });
+        }, BLOCK_TEXT_MARKERS);
 
         record.companyName = extracted.name ?? null;
         record.linkedinUrl = page.url().split('?')[0].replace(/\/$/, '');
@@ -119,51 +160,85 @@ export const routeHandlers = {
             record.specialties = String(extracted.specialties).split(/[,•·]/).map((s: string) => s.trim()).filter(Boolean);
         }
 
-        // Only save and charge if we identified the company with real data.
-        const hasData = !!record.companyName && (record.companyDescription !== null || record.website !== null || record.industry !== null || record.headquartersLocation !== null);
-        if (!hasData) {
-            log.warning(`No usable data for ${url} (authwall or layout change). Not saving or charging.`);
+        // Blocking is judged before the record is trusted, so a wall can never be saved
+        // or charged even when og: metadata fills in enough fields to look real.
+        const blocked = extracted.blocked === true
+            || isBlockedUrl(page.url())
+            || looksBlockedText(record.companyDescription);
+
+        if (blocked) {
+            session?.retire();
+            throw new Error(`LinkedIn blocked the company page for ${url} (authwall or verification).`);
+        }
+
+        const tryNextCandidate = async (reason: string): Promise<boolean> => {
+            const nextCandidate = candidates[candidateIndex + 1];
+            if (!searchName || !nextCandidate) return false;
+
+            log.info(`${reason} at ${url}; trying the next slug for "${searchName}".`);
+            // Keyed by URL so a candidate can never duplicate a direct request or another
+            // name's candidate, which would double-charge the same company.
+            await crawler.addRequests([{
+                url: nextCandidate,
+                userData: {
+                    label: 'company-profile',
+                    searchName,
+                    candidates,
+                    candidateIndex: candidateIndex + 1,
+                },
+            }]);
+            return true;
+        };
+
+        if (!hasUsableCompanyData(record)) {
+            if (await tryNextCandidate('No company found')) return;
+            log.warning(`No usable public data for ${url}. Not saving and not charging.`);
             return;
         }
 
-        await pushData(record);
+        // A guessed slug must actually belong to the requested company before it is billed.
+        if (searchName && !nameMatchesCompany(searchName, record.companyName)) {
+            log.warning(
+                `"${record.companyName}" at ${url} does not match the requested name "${searchName}".`,
+            );
+            if (await tryNextCandidate('Name mismatch')) return;
+            log.warning(`Could not resolve "${searchName}" to a matching company. Not saving and not charging.`);
+            return;
+        }
+
+        const canonicalUrl = normalizeCompanyUrl(record.linkedinUrl) ?? record.linkedinUrl;
+
+        // The slot is reserved before any await, so concurrent workers cannot overshoot
+        // the target, bill past the spending limit, or save one company twice.
+        if (!reserveSave(budget, canonicalUrl, searchName)) {
+            log.info(`Skipping ${canonicalUrl}: already saved or the company budget is reached.`);
+            return;
+        }
 
         try {
-            await Actor.charge({ eventName: 'company-scraped' });
+            await pushData(record);
+        } catch (error) {
+            releaseSave(budget, canonicalUrl, searchName);
+            throw error;
+        }
+
+        try {
+            const chargeResult = await Actor.charge({ eventName: 'company-scraped' });
+            registerCharge(budget, Boolean(chargeResult?.eventChargeLimitReached));
         } catch (chargeErr) {
-            log.warning(`PPE charge failed: ${chargeErr}`);
+            log.warning(`PPE charge failed: ${(chargeErr as Error).message}`);
         }
-        log.info(`Pushed data for: ${record.companyName ?? url}`);
+
+        log.info(`Pushed data for: ${record.companyName ?? url}`, {
+            saved: budget.pushed,
+            maxCompanies: budget.maxCompanies,
+        });
+
+        if (isFinished(budget)) {
+            const reason = budget.stopReason ?? 'max-results';
+            log.info(`Stopping crawl: ${reason}.`);
+            crawler.stop(`Reached ${reason}`);
+        }
     },
 
-    async handleSearchResults(context: PlaywrightCrawlingContext) {
-        const { page, request, log, enqueueLinks } = context;
-        const query = request.userData as { searchQuery?: string; maxResults?: number };
-
-        log.info(`Processing search results for: ${query?.searchQuery ?? request.url}`);
-
-        await page.waitForSelector('.reusable-search__result-container', { timeout: 30000 }).catch(() => {});
-
-        const resultLinks = page.locator('.reusable-search__result-container a[href*="/company/"], .entity-result__title-line a[href*="/company/"]');
-        const count = await resultLinks.count();
-        const limit = query?.maxResults ?? 5;
-        const urlsToEnqueue: string[] = [];
-
-        for (let i = 0; i < count && urlsToEnqueue.length < limit; i++) {
-            const href = await resultLinks.nth(i).getAttribute('href');
-            if (href && href.includes('/company/')) {
-                const cleanUrl = href.split('?')[0];
-                urlsToEnqueue.push(cleanUrl);
-            }
-        }
-
-        if (urlsToEnqueue.length > 0) {
-            await enqueueLinks({
-                urls: urlsToEnqueue,
-                label: 'company-profile',
-            });
-        }
-
-        log.info(`Enqueued ${urlsToEnqueue.length} company links from search results`);
-    },
 };

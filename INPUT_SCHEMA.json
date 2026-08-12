@@ -1,6 +1,6 @@
 {
     "title": "LinkedIn Company Scraper Input",
-    "description": "Configure which LinkedIn company pages to scrape. Direct company URLs work best (public guest pages); name search requires LinkedIn login and is best-effort.",
+    "description": "Configure which LinkedIn company pages to scrape. Direct company URLs are the most precise option; company names are resolved to their public LinkedIn company page.",
     "type": "object",
     "schemaVersion": 1,
     "required": [],
@@ -15,16 +15,16 @@
             "sectionCaption": "Direct Company URLs"
         },
         "companyNames": {
-            "title": "Company Names to Search (beta)",
-            "description": "Company names to search on LinkedIn. Note: LinkedIn search requires login, so this is best-effort. Direct company URLs are recommended.",
+            "title": "Company Names to Look Up",
+            "description": "Company names to resolve to their public LinkedIn company page. Each name is matched to one company. Well-known names resolve reliably; ambiguous or heavily abbreviated names may not, so direct URLs remain the most precise option.",
             "type": "array",
             "editor": "stringList",
             "default": [],
             "sectionCaption": "Search by Company Name"
         },
         "maxResults": {
-            "title": "Max Results per Search",
-            "description": "Maximum number of company profiles to scrape per company name search query.",
+            "title": "Max Company Name Lookups",
+            "description": "Maximum number of company names to look up in one run. Company URLs you list explicitly are always scraped and are not limited by this value.",
             "type": "integer",
             "default": 5,
             "minimum": 1,

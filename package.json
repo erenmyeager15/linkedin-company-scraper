@@ -10,8 +10,8 @@
         "build": "tsc",
         "start": "node dist/main.js",
         "start:prod": "node dist/main.js",
-        "test": "vitest",
-        "lint": "eslint src --ext .ts",
+        "test": "npm run build && node --test dist/lib.test.js",
+        "lint": "tsc --noEmit",
         "typecheck": "tsc --noEmit"
     },
     "dependencies": {

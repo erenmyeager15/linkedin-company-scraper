@@ -1,32 +1,16 @@
 import { Actor, log } from 'apify';
 import { PlaywrightCrawler } from 'crawlee';
 import { routeHandlers } from './routes.js';
+import {
+    BLOCKED_RESOURCE_PATTERNS,
+    candidateUrls,
+    clampMaxResults,
+    createBudget,
+    MAX_SLUG_CANDIDATES,
+    normalizeCompanyUrl,
+} from './lib.js';
+import { setBudget } from './state.js';
 import type { ActorInput } from './types.js';
-
-const LINKEDIN_BASE = 'https://www.linkedin.com';
-
-function normalizeUrl(url: string): string {
-    let cleaned = url.trim();
-    if (!cleaned.startsWith('http')) {
-        cleaned = `https://www.linkedin.com${cleaned.startsWith('/') ? '' : '/'}${cleaned}`;
-    }
-    cleaned = cleaned.replace(/\/$/, '');
-    const match = cleaned.match(/(linkedin\.com\/company\/[^/?]+)/i);
-    if (match) {
-        const path = match[1];
-        return `https://www.${path}`;
-    }
-    return cleaned;
-}
-
-function isLinkedInCompanyUrl(url: string): boolean {
-    return /linkedin\.com\/company\//i.test(url);
-}
-
-function buildSearchUrl(query: string, maxResults: number): string {
-    const encoded = encodeURIComponent(query);
-    return `${LINKEDIN_BASE}/search/results/companies/?keywords=${encoded}&origin=GLOBAL_SEARCH_HEADER`;
-}
 
 await Actor.main(async () => {
     const input = (await Actor.getInput()) as ActorInput | null;
@@ -37,7 +21,6 @@ await Actor.main(async () => {
     const {
         companyUrls = [],
         companyNames = [],
-        maxResults = 5,
         proxyConfiguration: proxyConfig,
     } = input;
 
@@ -45,33 +28,69 @@ await Actor.main(async () => {
         throw new Error('At least one company URL or company name is required.');
     }
 
+    const maxResults = clampMaxResults(input.maxResults);
+
     const seenUrls = new Set<string>();
-    const urlsToScrape: string[] = [];
+    const directRequests: Array<{ url: string; userData: Record<string, unknown> }> = [];
 
     for (const raw of companyUrls) {
         if (!raw) continue;
-        const normalized = normalizeUrl(raw);
-        if (!isLinkedInCompanyUrl(normalized)) {
+        const normalized = normalizeCompanyUrl(raw);
+        if (!normalized) {
             log.warning(`Skipping invalid LinkedIn company URL: ${raw}`);
             continue;
         }
-        if (!seenUrls.has(normalized)) {
-            seenUrls.add(normalized);
-            urlsToScrape.push(normalized);
-        }
+        if (seenUrls.has(normalized)) continue;
+        seenUrls.add(normalized);
+        directRequests.push({ url: normalized, userData: { label: 'company-profile' } });
     }
 
-    const searchData: Array<{ url: string; userData: { label: string; searchQuery: string; maxResults: number } }> = [];
+    // LinkedIn company search needs a login, so each name is resolved against public
+    // company pages by trying the slugs LinkedIn actually uses, one at a time.
+    const nameRequests: Array<{ url: string; userData: Record<string, unknown> }> = [];
     for (const name of companyNames) {
-        if (!name) continue;
-        const searchUrl = buildSearchUrl(name, maxResults);
-        searchData.push({
-            url: searchUrl,
-            userData: { label: 'search-results', searchQuery: name, maxResults },
+        if (!name?.trim()) continue;
+        const candidates = candidateUrls(name);
+        if (candidates.length === 0) {
+            log.warning(`Could not derive a LinkedIn company URL from name: ${name}`);
+            continue;
+        }
+        // If an earlier target already claimed the first spelling, start this name at the
+        // next unused candidate instead of dropping the name entirely.
+        const startIndex = candidates.findIndex((candidate) => !seenUrls.has(candidate));
+        if (startIndex === -1) {
+            log.info(`All slug candidates for "${name}" are already queued; skipping duplicate lookup.`);
+            continue;
+        }
+
+        seenUrls.add(candidates[startIndex]);
+        nameRequests.push({
+            url: candidates[startIndex],
+            userData: {
+                label: 'company-profile',
+                searchName: name,
+                candidates,
+                candidateIndex: startIndex,
+            },
         });
     }
 
-    log.info(`Starting scraper: ${urlsToScrape.length} direct URLs, ${searchData.length} name searches`);
+    // Name lookups are capped by maxResults; explicitly listed URLs are always honoured.
+    const cappedNameRequests = nameRequests.slice(0, maxResults);
+    if (cappedNameRequests.length < nameRequests.length) {
+        log.info(`Limiting name lookups to maxResults (${maxResults}) of ${nameRequests.length} names.`);
+    }
+
+    if (directRequests.length + cappedNameRequests.length === 0) {
+        throw new Error('No valid LinkedIn company URLs or resolvable company names were provided.');
+    }
+
+    // Each direct URL and each resolved name yields at most one company, so the number
+    // of targets is the hard ceiling on saved and charged records.
+    const budget = createBudget(directRequests.length + cappedNameRequests.length);
+    setBudget(budget);
+
+    log.info(`Starting scraper: ${directRequests.length} direct URLs, ${cappedNameRequests.length} name lookups`);
 
     const proxyConfiguration = proxyConfig?.useApifyProxy !== false
         ? await Actor.createProxyConfiguration({
@@ -79,6 +98,10 @@ await Actor.main(async () => {
             countryCode: proxyConfig?.apifyProxyCountry ?? 'US',
         })
         : undefined;
+
+    if (!proxyConfiguration) {
+        log.warning('Running without Apify Proxy. LinkedIn blocks datacenter IPs, so results are likely to be empty.');
+    }
 
     const crawler = new PlaywrightCrawler({
         proxyConfiguration,
@@ -88,6 +111,8 @@ await Actor.main(async () => {
         navigationTimeoutSecs: 120,
         maxRequestRetries: 3,
         retryOnBlocked: true,
+        // Bounds a large input list: every target plus its slug retries and a small margin.
+        maxRequestsPerCrawl: directRequests.length + cappedNameRequests.length * MAX_SLUG_CANDIDATES + 10,
 
         launchContext: {
             launchOptions: {
@@ -109,7 +134,12 @@ await Actor.main(async () => {
         },
 
         preNavigationHooks: [
-            async ({ page }) => {
+            async ({ page, blockRequests }) => {
+                // Images, media and fonts are pure residential-proxy bandwidth for
+                // markup-only extraction. Stylesheets are kept so text visibility
+                // stays accurate for block detection.
+                await blockRequests({ urlPatterns: BLOCKED_RESOURCE_PATTERNS })
+                    .catch(() => { /* best effort */ });
                 page.setDefaultTimeout(8000);
                 const delay = Math.floor(Math.random() * 4000) + 3000;
                 await new Promise((resolve) => setTimeout(resolve, delay));
@@ -117,12 +147,7 @@ await Actor.main(async () => {
         ],
 
         requestHandler: async (context) => {
-            const label = context.request.userData.label as string | undefined;
-            if (label === 'search-results') {
-                await routeHandlers.handleSearchResults(context);
-            } else {
-                await routeHandlers.handleCompanyProfile(context);
-            }
+            await routeHandlers.handleCompanyProfile(context);
         },
 
         failedRequestHandler: async ({ request, log: ctxLog, session }, error) => {
@@ -133,20 +158,25 @@ await Actor.main(async () => {
         },
     });
 
-    if (urlsToScrape.length > 0) {
-        await crawler.addRequests(
-            urlsToScrape.map((url) => ({
-                url,
-                userData: { label: 'company-profile' },
-            }))
+    await crawler.run([...directRequests, ...cappedNameRequests]);
+
+    log.info('Actor finished', {
+        companiesSaved: budget.pushed,
+        companiesCharged: budget.charged,
+        stopReason: budget.stopReason ?? 'targets-exhausted',
+    });
+
+    if (budget.charged < budget.pushed) {
+        log.warning(`${budget.pushed - budget.charged} company record(s) were saved without a successful charge.`);
+    }
+
+    if (budget.stopReason === 'charge-limit') {
+        await Actor.setStatusMessage(`Stopped at the run's spending limit after saving ${budget.pushed} companies.`);
+    } else if (budget.pushed === 0) {
+        await Actor.setStatusMessage(
+            'No public company data was extracted. Check the company URLs, or enable Apify Proxy (residential).',
         );
+    } else {
+        await Actor.setStatusMessage(`Saved ${budget.pushed} LinkedIn company profiles.`);
     }
-
-    if (searchData.length > 0) {
-        await crawler.addRequests(searchData);
-    }
-
-    await crawler.run();
-
-    log.info('Actor finished successfully');
 });

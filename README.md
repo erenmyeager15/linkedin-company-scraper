@@ -4,7 +4,9 @@ Extract structured company data from public LinkedIn company pages. Provide dire
 
 The Actor uses a browser with residential proxy support, session rotation, retries, and conservative concurrency. It saves only records that contain a company name plus meaningful public profile data. Missing values remain `null`; the Actor does not invent data or access private LinkedIn content.
 
-Direct company URLs are the reliable input method. Company-name search is available as a best-effort beta because LinkedIn may require authentication for search pages.
+Direct company URLs are the most precise input method. Company names are resolved to their public LinkedIn company page without login, which works reliably for well-known names and may not resolve ambiguous or heavily abbreviated ones.
+
+A company is saved and charged only when the page yields a company name plus at least one substantive public field. Blocked pages are retried on a fresh session, and are never saved and never charged.
 
 ## Output fields
 
