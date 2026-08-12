@@ -1,7 +1,0 @@
-{
-  "companyUrls": [
-    "https://www.linkedin.com/company/microsoft",
-    "https://www.linkedin.com/company/google"
-  ],
-  "proxyConfiguration": { "useApifyProxy": true, "apifyProxyGroups": ["RESIDENTIAL"] }
-}
