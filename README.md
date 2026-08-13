@@ -1,4 +1,4 @@
-# LinkedIn Company Pages Scraper
+# LinkedIn Company Scraper - $3/1k, Profiles & Insights
 
 > **Unofficial Actor.** This tool is independent and is **not affiliated with, endorsed by, or sponsored by LinkedIn**. It collects only publicly available company page data and never uses LinkedIn credentials, cookies, or private APIs.
 

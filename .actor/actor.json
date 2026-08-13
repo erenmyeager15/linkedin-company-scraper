@@ -1,7 +1,7 @@
 {
     "actorSpecification": 1,
     "name": "linkedin-company-scraper",
-    "title": "LinkedIn Company Scraper - Profiles & Insights",
+    "title": "LinkedIn Company Scraper - $3/1k, Profiles & Insights",
     "description": "Scrape public LinkedIn company pages: name, description, industry, size, HQ, company type, website, specialties, followers, employee count, and logo. Provide company URLs or names.",
     "version": "1.0",
     "dockerfile": "Dockerfile",
