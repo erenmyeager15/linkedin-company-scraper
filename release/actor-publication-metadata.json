@@ -1,0 +1,17 @@
+{
+  "isPublic": true,
+  "title": "LinkedIn Company Monitor - CRM & Headcount Changes",
+  "description": "Enrich public LinkedIn company pages and monitor follower, employee, website, industry, size, HQ, and company-type changes with private history, deterministic signals, and CSV/Markdown reports.",
+  "categories": [
+    "LEAD_GENERATION",
+    "SOCIAL_MEDIA",
+    "AUTOMATION"
+  ],
+  "seoTitle": "LinkedIn Company Monitor: CRM & Headcount Changes",
+  "seoDescription": "Enrich public LinkedIn company pages and track follower, employee, website, industry, size, HQ, and company-type changes with CSV and Markdown reports.",
+  "actorPermissionLevel": "LIMITED_PERMISSIONS",
+  "exampleRunInput": {
+    "contentType": "application/json; charset=utf-8",
+    "body": "{\"companyUrls\":[\"https://www.linkedin.com/company/microsoft\",\"https://www.linkedin.com/company/apifytech\"],\"companyNames\":[],\"maxResults\":5,\"accessMode\":\"direct_first\",\"watchlistName\":\"us-saas-watchlist\",\"followerChangePercent\":5,\"employeeChangePercent\":5,\"historyLimit\":10,\"generateMarkdownReport\":true,\"generateCsvReport\":true,\"proxyConfiguration\":{\"useApifyProxy\":true,\"apifyProxyGroups\":[\"RESIDENTIAL\"],\"apifyProxyCountry\":\"US\"}}"
+  }
+}
