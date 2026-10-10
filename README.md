@@ -1,102 +1,121 @@
-# LinkedIn Company Scraper - $3/1k, Profiles & Insights
+# LinkedIn Company Monitor - CRM & Headcount Changes
 
-> **Unofficial Actor.** This tool is independent and is **not affiliated with, endorsed by, or sponsored by LinkedIn**. It collects only publicly available company page data and never uses LinkedIn credentials, cookies, or private APIs.
+Turn public LinkedIn company pages into structured CRM enrichment and a recurring company-change watchlist. Track follower and employee-count movement, website or positioning changes, company-size updates, headquarters changes, and other public profile signals—without LinkedIn credentials.
 
-Extract structured company data from public LinkedIn company pages. Provide direct LinkedIn company URLs to collect company names, websites, descriptions, industries, employee ranges, headquarters, company types, specialties, follower counts, public employee counts, logos, and profile URLs.
+At **$3 per 1,000 successfully saved companies**, the Actor charges only for usable records. A direct HTTP attempt runs first to minimize platform cost, followed by bounded Residential HTTP and browser fallbacks only when public access needs them.
 
-The Actor uses an HTTP-first extraction path for speed and lower platform cost, with a bounded browser fallback only when a public page cannot be read reliably over HTTP.
+> **Unofficial Actor.** This tool is independent and is not affiliated with, endorsed by, or sponsored by LinkedIn. It reads public company pages only and never uses LinkedIn credentials, private APIs, personal profiles, emails, or phone numbers.
 
-The Actor uses residential proxy support, session rotation, retries, and bounded concurrency. Browser fallback is used only when the HTTP-first path cannot reliably read a public page. It saves only records that contain a company name plus meaningful public profile data. Missing values remain `null`; the Actor does not invent data or access private LinkedIn content.
+## Why teams use it
 
-Direct company URLs are the most precise input method. Company names are resolved to their public LinkedIn company page without login, which works reliably for well-known names and may not resolve ambiguous or heavily abbreviated ones.
+- **CRM data hygiene:** refresh company website, industry, size, HQ, type, and public counts.
+- **Account intelligence:** detect material follower or employee movement with configurable thresholds.
+- **Competitor monitoring:** schedule the same watchlist and review exactly which public fields changed.
+- **ABM research:** normalize domains and public headcount ranges for downstream segmentation.
+- **Audit-ready exports:** receive structured JSON plus formula-safe CSV and a concise Markdown report.
 
-A company is saved and charged only when the page yields a company name plus at least one substantive public field. Blocked pages are retried on a fresh session, and are never saved and never charged.
+## Recurring watchlists
 
-## Output fields
+Use the same `watchlistName` and company URLs on every scheduled run. The Actor privately retains a bounded observation history for each company and returns:
 
-| Field | Description |
-|---|---|
-| `companyName` | Public company name |
-| `linkedinUrl` | Canonical LinkedIn company URL |
-| `website` | Public company website |
-| `companyDescription` | Public company description |
-| `industry` | LinkedIn industry |
-| `companySize` | Published employee-size range |
-| `headquartersLocation` | Published headquarters location |
-| `companyType` | Public, private, nonprofit, or other published type |
-| `foundedYear` | Published founding year when available |
-| `specialties` | Published company specialties |
-| `followerCount` | Public follower count |
-| `employeeCount` | Public employee count when exposed in page metadata |
-| `logoUrl` | Public company logo URL |
-| `matchedFromName` | Original name input when the profile was resolved by name |
-| `scrapedAt` | ISO extraction timestamp |
+- `observationStatus`: `baseline`, `updated`, `unchanged`, or `partial`
+- `previousValues`: earlier values for changed fields
+- `deltas`: numeric follower and employee changes
+- `changes`: exact public fields that changed
+- `signals`: deterministic alerts such as `FOLLOWERS_UP_8.2_PCT` or `COMPANY_SIZE_CHANGED`
+- `observationHistory`: the latest 2–20 bounded observations
 
-## Input
+The run also saves `RUN_SUMMARY`, `report.md`, and `report.csv` in the default key-value store. Monitoring state stays private to your Actor storage.
+
+## Input example
 
 ```json
 {
   "companyUrls": [
-    "https://www.linkedin.com/company/microsoft"
+    "https://www.linkedin.com/company/microsoft",
+    "https://www.linkedin.com/company/apifytech"
   ],
   "companyNames": [],
   "maxResults": 5,
+  "accessMode": "direct_first",
+  "watchlistName": "us-saas-watchlist",
+  "followerChangePercent": 5,
+  "employeeChangePercent": 5,
+  "historyLimit": 10,
+  "generateMarkdownReport": true,
+  "generateCsvReport": true,
   "proxyConfiguration": {
     "useApifyProxy": true,
-    "apifyProxyGroups": ["RESIDENTIAL"]
+    "apifyProxyGroups": ["RESIDENTIAL"],
+    "apifyProxyCountry": "US"
   }
 }
 ```
 
-## Sample output
+Direct URLs are the most precise input. Company-name lookup tests a bounded set of likely public slugs and verifies the returned company name before saving or charging.
+
+## Output example
 
 ```json
 {
   "companyName": "Microsoft",
   "linkedinUrl": "https://www.linkedin.com/company/microsoft",
-  "website": "https://news.microsoft.com/",
-  "companyDescription": "Every company has a mission. What's ours? To empower every person and every organization to achieve more.",
+  "companySlug": "microsoft",
+  "website": "https://www.microsoft.com/",
+  "websiteDomain": "microsoft.com",
   "industry": "Software Development",
   "companySize": "10,001+ employees",
+  "companySizeMin": 10001,
+  "companySizeMax": null,
   "headquartersLocation": "Redmond, Washington, US",
-  "companyType": "Public Company",
-  "foundedYear": 1975,
-  "specialties": ["Business Software", "Developer Tools"],
   "followerCount": "28,327,871",
+  "followerCountNumeric": 28327871,
   "employeeCount": "232340",
-  "logoUrl": "https://media.licdn.com/dms/image/...",
-  "matchedFromName": null,
-  "scrapedAt": "2026-06-12T14:00:00.000Z"
+  "employeeCountNumeric": 232340,
+  "fieldCoveragePercent": 100,
+  "watchlistName": "us-saas-watchlist",
+  "observationStatus": "updated",
+  "observationCount": 2,
+  "previousObservedAt": "2026-10-10T14:00:00.000Z",
+  "deltas": { "followers": 15200, "employees": 340 },
+  "changes": ["followerCount", "employeeCount"],
+  "signals": [],
+  "scrapedAt": "2026-10-11T14:00:00.000Z"
 }
 ```
 
-## How to scrape LinkedIn company pages
+Public fields can be missing or change presentation. Missing values remain `null`; the Actor does not infer private facts. A `partial` observation warns that a previously visible public count disappeared, so it is not mistaken for a real drop.
 
-1. Open the Actor input.
-2. Add one or more direct LinkedIn company URLs.
-3. Keep residential proxy rotation enabled.
-4. Run the Actor.
-5. Export the dataset as JSON, CSV, Excel, or another supported format.
+## Cost and reliability controls
 
-## Use cases
+`direct_first` is the recommended mode:
 
-- B2B company research and lead enrichment
-- Market and competitor analysis
-- Industry and geographic segmentation
-- Recruitment account research
-- Public company directory enrichment
+1. Try the public page over direct HTTP at no proxy-bandwidth cost.
+2. Retry unresolved targets through the configured proxy over HTTP.
+3. Launch a resource-blocked browser only for targets still unresolved.
+
+Set `proxy_first` when consistency matters more than minimum cost. Explicitly disabling proxy remains supported, but LinkedIn may block direct access.
+
+Blocked, auth-wall, mismatched, or empty pages are never saved and never charged. Duplicate companies are charged at most once per run, and the Actor respects Apify spending limits.
+
+## Output fields
+
+Core enrichment includes company name, canonical LinkedIn URL, website and domain, description, industry, size and normalized size bounds, headquarters, type, founding year, specialties, followers, public employee count, logo, match provenance, field coverage, and timestamp.
+
+Monitoring fields add observation status/count, prior timestamp and values, numeric deltas, changed fields, signals, and bounded history.
 
 ## Pricing
 
 | Event | Price |
-|---|---|
-| `company-scraped` | $0.003 per successfully saved company profile ($3.00 per 1,000) |
+|---|---:|
+| Successfully saved company | $0.003 |
+| 1,000 successfully saved companies | $3.00 |
 
-The Actor charges only after a usable company record is saved. Platform usage is included in the event price for users.
+Platform usage is included in the event price for Store users. No usable record means no company event charge.
 
 ## Responsible use
 
-This Actor reads only publicly accessible company-page data. It does not use LinkedIn credentials or access private profiles. Users are responsible for complying with LinkedIn's terms, privacy requirements, and applicable laws.
+Use the data only for lawful purposes and review important changes before acting. The Actor does not collect personal-profile data or private contact information. Users are responsible for complying with applicable laws and platform terms.
 
 ## License
 

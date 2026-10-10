@@ -1,14 +1,32 @@
 {
     "actorOutputSchemaVersion": 1,
-    "title": "LinkedIn Company Scraper Output",
-    "description": "Structured public LinkedIn company records with names, profile URLs, websites, descriptions, industries, size ranges, headquarters, company types, founding years, specialties, follower counts, public employee counts, provenance, logos, and timestamps.",
+    "title": "LinkedIn Company Monitor Output",
+    "description": "Structured public company enrichment plus recurring observations, field changes, numeric deltas, deterministic signals, bounded history, and Markdown/CSV reports.",
     "type": "object",
     "properties": {
         "results": {
             "type": "string",
             "title": "Public LinkedIn company records",
-            "description": "Clean dataset items containing public LinkedIn company profile, industry, size, headquarters, website, specialty, follower, and logo data. A record is saved only when the page yields a company name plus at least one substantive public field.",
+            "description": "Public company records enriched with field coverage, normalized counts, observation status, previous values, deltas, changed fields, signals, and bounded history.",
             "template": "{{links.apiDefaultDatasetUrl}}/items"
+        },
+        "runSummary": {
+            "type": "string",
+            "title": "Watchlist run summary",
+            "description": "Counts for baseline, updated, unchanged, partial, and signaled companies.",
+            "template": "{{links.apiDefaultKeyValueStoreUrl}}/records/RUN_SUMMARY"
+        },
+        "markdownReport": {
+            "type": "string",
+            "title": "Markdown change report",
+            "description": "Human-readable recurring company-change report.",
+            "template": "{{links.apiDefaultKeyValueStoreUrl}}/records/report.md"
+        },
+        "csvReport": {
+            "type": "string",
+            "title": "CSV change report",
+            "description": "Spreadsheet-ready recurring company-change report with formula-injection protection.",
+            "template": "{{links.apiDefaultKeyValueStoreUrl}}/records/report.csv"
         }
     }
 }

@@ -1,16 +1,16 @@
 {
     "actorSpecification": 1,
     "name": "linkedin-company-scraper",
-    "title": "LinkedIn Company Scraper - $3/1k, Profiles & Insights",
-    "description": "Scrape public LinkedIn company pages: name, description, industry, size, HQ, company type, website, specialties, followers, employee count, and logo. Provide company URLs or names.",
-    "version": "1.0",
+    "title": "LinkedIn Company Monitor - CRM & Headcount Changes",
+    "description": "Enrich public LinkedIn company pages and monitor follower, employee, website, industry, size, HQ, and company-type changes. Includes private history, deterministic signals, Markdown/CSV reports, and direct-first cost control.",
+    "version": "1.1",
     "dockerfile": "Dockerfile",
     "readme": "../README.md",
     "input": "../INPUT_SCHEMA.json",
     "output": "./output_schema.json",
     "exampleRunInput": {
         "contentType": "application/json; charset=utf-8",
-        "body": "{\"companyUrls\":[\"https://www.linkedin.com/company/microsoft\"],\"companyNames\":[\"Stripe\"],\"maxResults\":5,\"proxyConfiguration\":{\"useApifyProxy\":true,\"apifyProxyGroups\":[\"RESIDENTIAL\"],\"apifyProxyCountry\":\"US\"}}"
+        "body": "{\"companyUrls\":[\"https://www.linkedin.com/company/microsoft\",\"https://www.linkedin.com/company/apifytech\"],\"companyNames\":[],\"maxResults\":5,\"accessMode\":\"direct_first\",\"watchlistName\":\"us-saas-watchlist\",\"followerChangePercent\":5,\"employeeChangePercent\":5,\"historyLimit\":10,\"generateMarkdownReport\":true,\"generateCsvReport\":true,\"proxyConfiguration\":{\"useApifyProxy\":true,\"apifyProxyGroups\":[\"RESIDENTIAL\"],\"apifyProxyCountry\":\"US\"}}"
     },
     "pricingInfo": {
         "pricingModel": "PAY_PER_EVENT",
@@ -26,7 +26,7 @@
             }
         }
     },
-    "categories": ["LEAD_GENERATION", "SOCIAL_MEDIA", "OTHER"],
+    "categories": ["LEAD_GENERATION", "SOCIAL_MEDIA", "AUTOMATION"],
     "minMemoryMbytes": 1024,
     "maxMemoryMbytes": 4096,
     "defaultRunOptions": {
@@ -44,6 +44,7 @@
                             "companyName",
                             "linkedinUrl",
                             "website",
+                            "websiteDomain",
                             "companyDescription",
                             "industry",
                             "companySize",
@@ -53,6 +54,15 @@
                             "specialties",
                             "followerCount",
                             "employeeCount",
+                            "followerCountNumeric",
+                            "employeeCountNumeric",
+                            "fieldCoveragePercent",
+                            "watchlistName",
+                            "observationStatus",
+                            "observationCount",
+                            "deltas",
+                            "changes",
+                            "signals",
                             "logoUrl",
                             "matchedFromName",
                             "scrapedAt"
@@ -64,6 +74,7 @@
                             "companyName": { "label": "Company Name", "format": "text" },
                             "linkedinUrl": { "label": "LinkedIn URL", "format": "link" },
                             "website": { "label": "Website", "format": "link" },
+                            "websiteDomain": { "label": "Website Domain", "format": "text" },
                             "companyDescription": { "label": "Company Description", "format": "text" },
                             "industry": { "label": "Industry", "format": "text" },
                             "companySize": { "label": "Size", "format": "text" },
@@ -73,6 +84,15 @@
                             "specialties": { "label": "Specialties", "format": "array" },
                             "followerCount": { "label": "Followers", "format": "text" },
                             "employeeCount": { "label": "Employee Count", "format": "text" },
+                            "followerCountNumeric": { "label": "Followers (Numeric)", "format": "number" },
+                            "employeeCountNumeric": { "label": "Employees (Numeric)", "format": "number" },
+                            "fieldCoveragePercent": { "label": "Field Coverage %", "format": "number" },
+                            "watchlistName": { "label": "Watchlist", "format": "text" },
+                            "observationStatus": { "label": "Observation Status", "format": "text" },
+                            "observationCount": { "label": "Observation Count", "format": "number" },
+                            "deltas": { "label": "Count Deltas", "format": "object" },
+                            "changes": { "label": "Changed Fields", "format": "array" },
+                            "signals": { "label": "Signals", "format": "array" },
                             "logoUrl": { "label": "Logo URL", "format": "image" },
                             "matchedFromName": { "label": "Matched From Name", "format": "text" },
                             "scrapedAt": { "label": "Scraped At", "format": "date" }

@@ -17,7 +17,8 @@ import {
     releaseSave,
     reserveSave,
 } from './lib.js';
-import { getBudget } from './state.js';
+import { getBudget, getMonitoring } from './state.js';
+import type { PreparedRecord } from './monitoring.js';
 import type { CompanyRecord } from './types.js';
 
 export const routeHandlers = {
@@ -152,13 +153,17 @@ export const routeHandlers = {
             log.info(`Skipping ${canonicalUrl}: already saved or the company budget is reached.`);
             return;
         }
+        record.linkedinUrl = canonicalUrl;
 
+        let prepared: PreparedRecord;
         try {
-            await pushData(record);
+            prepared = await getMonitoring().prepare(record);
+            await pushData(prepared.record);
         } catch (error) {
             releaseSave(budget, canonicalUrl, searchName);
             throw error;
         }
+        await getMonitoring().commit(prepared);
 
         try {
             const chargeResult = await Actor.charge({ eventName: 'company-scraped' });
@@ -167,9 +172,11 @@ export const routeHandlers = {
             log.warning(`PPE charge failed: ${(chargeErr as Error).message}`);
         }
 
-        log.info(`Pushed data for: ${record.companyName ?? url}`, {
+        log.info(`Pushed data for: ${prepared.record.companyName ?? url}`, {
             saved: budget.pushed,
             maxCompanies: budget.maxCompanies,
+            observationStatus: prepared.record.observationStatus,
+            signals: prepared.record.signals,
         });
 
         if (isFinished(budget)) {

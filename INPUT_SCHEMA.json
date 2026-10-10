@@ -1,6 +1,6 @@
 {
     "title": "LinkedIn Company Scraper Input",
-    "description": "Configure which LinkedIn company pages to scrape. Direct company URLs are the most precise option; company names are resolved to their public LinkedIn company page.",
+    "description": "Enrich public LinkedIn company pages or run a recurring company watchlist. Direct URLs are the most precise option. Reuse the same watchlist name to receive changes, deltas, alerts, and bounded observation history.",
     "type": "object",
     "schemaVersion": 1,
     "required": [],
@@ -31,9 +31,68 @@
             "maximum": 100,
             "editor": "number"
         },
+        "accessMode": {
+            "title": "Access Strategy",
+            "description": "Direct first minimizes platform cost and uses the configured proxy only when public access fails. Proxy first skips the free direct attempt.",
+            "type": "string",
+            "editor": "select",
+            "default": "direct_first",
+            "enum": ["direct_first", "proxy_first"],
+            "enumTitles": ["Direct first, then proxy fallback", "Proxy first"],
+            "sectionCaption": "Cost and Reliability"
+        },
+        "watchlistName": {
+            "title": "Watchlist Name",
+            "description": "A stable private name for recurring comparisons. Run the same companies with the same name to get field changes, follower and employee deltas, and history.",
+            "type": "string",
+            "default": "default",
+            "editor": "textfield",
+            "sectionCaption": "Recurring Company Monitoring"
+        },
+        "followerChangePercent": {
+            "title": "Follower Change Alert (%)",
+            "description": "Create a signal when the public follower count changes by at least this percentage.",
+            "type": "number",
+            "default": 5,
+            "minimum": 0,
+            "maximum": 100,
+            "editor": "number"
+        },
+        "employeeChangePercent": {
+            "title": "Employee Change Alert (%)",
+            "description": "Create a signal when the public employee count changes by at least this percentage.",
+            "type": "number",
+            "default": 5,
+            "minimum": 0,
+            "maximum": 100,
+            "editor": "number"
+        },
+        "historyLimit": {
+            "title": "Observations Kept Per Company",
+            "description": "Bounded private history retained for each company and watchlist.",
+            "type": "integer",
+            "default": 10,
+            "minimum": 2,
+            "maximum": 20,
+            "editor": "number"
+        },
+        "generateMarkdownReport": {
+            "title": "Create Markdown Report",
+            "description": "Save a concise, shareable company-change report in the run's key-value store.",
+            "type": "boolean",
+            "default": true,
+            "editor": "checkbox"
+        },
+        "generateCsvReport": {
+            "title": "Create CSV Change Report",
+            "description": "Save a spreadsheet-ready company-change report in the run's key-value store.",
+            "type": "boolean",
+            "default": true,
+            "editor": "checkbox"
+        },
         "proxyConfiguration": {
             "title": "Proxy Configuration",
-            "description": "Proxy settings for scraping. Residential proxies are strongly recommended for LinkedIn.",
+            "description": "Fallback proxy settings. Residential US is the reliable default when direct public access is blocked.",
             "type": "object",
             "editor": "proxy",
             "default": {

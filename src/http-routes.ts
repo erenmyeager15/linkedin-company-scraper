@@ -16,7 +16,8 @@ import {
     releaseSave,
     reserveSave,
 } from './lib.js';
-import { getBudget } from './state.js';
+import { getBudget, getMonitoring } from './state.js';
+import type { PreparedRecord } from './monitoring.js';
 import type { CompanyRecord } from './types.js';
 
 export async function handleHttpCompanyProfile(
@@ -94,13 +95,17 @@ export async function handleHttpCompanyProfile(
 
     const canonicalUrl = normalizeCompanyUrl(record.linkedinUrl) ?? record.linkedinUrl;
     if (!reserveSave(budget, canonicalUrl, searchName)) return;
+    record.linkedinUrl = canonicalUrl;
 
+    let prepared: PreparedRecord;
     try {
-        await pushData(record);
+        prepared = await getMonitoring().prepare(record);
+        await pushData(prepared.record);
     } catch (error) {
         releaseSave(budget, canonicalUrl, searchName);
         throw error;
     }
+    await getMonitoring().commit(prepared);
 
     try {
         const chargeResult = await Actor.charge({ eventName: 'company-scraped' });
@@ -109,5 +114,8 @@ export async function handleHttpCompanyProfile(
         log.warning(`PPE charge failed: ${(error as Error).message}`);
     }
 
-    log.info(`HTTP-first extraction saved: ${record.companyName ?? url}`);
+    log.info(`HTTP extraction saved: ${prepared.record.companyName ?? url}`, {
+        observationStatus: prepared.record.observationStatus,
+        signals: prepared.record.signals,
+    });
 }
