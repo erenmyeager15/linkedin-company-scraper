@@ -2,7 +2,7 @@
     "actorSpecification": 1,
     "name": "linkedin-company-scraper",
     "title": "LinkedIn Company Monitor - CRM & Headcount Changes",
-    "description": "Enrich public LinkedIn company pages and monitor follower, employee, website, industry, size, HQ, and company-type changes. Includes private history, deterministic signals, Markdown/CSV reports, and direct-first cost control.",
+    "description": "Extract public LinkedIn company data for CRM enrichment, account research and competitor monitoring. Track follower, public employee-count and profile changes with private watchlists and CSV/Markdown reports. $3/1,000 saved companies plus the start event. No login.",
     "version": "1.1",
     "dockerfile": "Dockerfile",
     "readme": "../README.md",

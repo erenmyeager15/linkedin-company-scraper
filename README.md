@@ -1,8 +1,8 @@
 # LinkedIn Company Monitor - CRM & Headcount Changes
 
-Turn public LinkedIn company pages into structured CRM enrichment and a recurring company-change watchlist. Track follower and employee-count movement, website or positioning changes, company-size updates, headquarters changes, and other public profile signals—without LinkedIn credentials.
+Extract public LinkedIn company data for CRM enrichment, account-based marketing (ABM) research and competitor monitoring. Build a recurring company watchlist to track follower and public employee-count movement, website or positioning changes, company-size updates and headquarters changes—without LinkedIn credentials.
 
-At **$3 per 1,000 successfully saved companies**, the Actor charges only for usable records. A direct HTTP attempt runs first to minimize platform cost, followed by bounded Residential HTTP and browser fallbacks only when public access needs them.
+The company-result event costs **$3 per 1,000 successfully saved companies**, plus the existing memory-based Actor Start fee. A direct HTTP attempt runs first to reduce proxy use, followed by bounded Residential HTTP and browser fallbacks only when public access needs them.
 
 > **Unofficial Actor.** This tool is independent and is not affiliated with, endorsed by, or sponsored by LinkedIn. It reads public company pages only and never uses LinkedIn credentials, private APIs, personal profiles, emails, or phone numbers.
 
@@ -96,7 +96,7 @@ Public fields can be missing or change presentation. Missing values remain `null
 
 Set `proxy_first` when consistency matters more than minimum cost. Explicitly disabling proxy remains supported, but LinkedIn may block direct access.
 
-Blocked, auth-wall, mismatched, or empty pages are never saved and never charged. Duplicate companies are charged at most once per run, and the Actor respects Apify spending limits.
+Blocked, auth-wall, mismatched or empty pages are not saved and do not trigger a `company-scraped` event. The Actor Start fee can still apply when no company is saved. Duplicate companies trigger at most one company-result event per run, and saving respects Apify's event-charge limit.
 
 ## Output fields
 
@@ -104,14 +104,17 @@ Core enrichment includes company name, canonical LinkedIn URL, website and domai
 
 Monitoring fields add observation status/count, prior timestamp and values, numeric deltas, changed fields, signals, and bounded history.
 
-## Pricing
+## Pricing: Company Records + Actor Start
 
 | Event | Price |
 |---|---:|
 | Successfully saved company | $0.003 |
 | 1,000 successfully saved companies | $3.00 |
+| `apify-actor-start` | $0.00005 per GB, minimum one event |
 
-Platform usage is included in the event price for Store users. No usable record means no company event charge.
+No usable record means no `company-scraped` charge, not a completely free run. The Actor Start fee can still apply to empty or failed runs, and companies already saved before a partial failure retain their normal result charges. Apify counts one start event per GB of memory, with at least one event; at the unchanged 1024 MB default, that is `$0.00005` for the start event.
+
+Platform usage is included under the current Store pricing. Private history and CSV/Markdown reports have no extra monitoring event. See the [live Pricing tab](https://apify.com/fascinating_lentil/linkedin-company-scraper/pricing) for current event prices, discounts and platform-usage terms. Company-result subtotals exclude the start fee.
 
 ## Responsible use
 
